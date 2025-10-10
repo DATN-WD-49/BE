@@ -30,7 +30,7 @@ export const registerService = async (payload) => {
     } = existingUser;
     throwIfDuplicate(userName, existingUserName, AUTH_MESSAGES.CONFLICT_NAME);
     throwIfDuplicate(email, existingEmail, AUTH_MESSAGES.CONFLICT_EMAIL);
-    throwIfDuplicate(phone, existingPhone, AUTH_MESSAGES.CONFLICT_EMAIL);
+    throwIfDuplicate(phone, existingPhone, AUTH_MESSAGES.CONFLICT_PHONE);
   }
   const hashedPassword = await hashPassword(password);
   const user = await User.create({
