@@ -8,10 +8,15 @@ const envVarsSchema = z.object({
   PORT: z.coerce.number().default(8000),
   HOST: z.string().min(1).default("127.0.0.1"),
   DB_URI: z.string().min(1).describe("Local Mongo DB"),
+  CLIENT_URL: z.string(),
+  JWT_ACCESS_SECRET: z.string(),
+  JWT_ACCESS_EXPIRED: z.string().default("30d"),
+  JWT_VERIFY_SECRET: z.string(),
+  JWT_VERIFY_EXPIRED: z.string().default("1d"),
+  MAIL_USER: z.string(),
+  MAIL_PASS: z.string(),
 });
-
 const result = envVarsSchema.safeParse(process.env);
-
 if (!result.success) {
   result.error.issues.forEach((issue) => {
     console.error(`❌ Field "${issue.path.join(".")}" - ${issue.message}`);
@@ -23,4 +28,16 @@ if (!result.success) {
 }
 const envVars = result.data;
 
-export const { NODE_ENV, PORT, HOST, DB_URI, CORS } = envVars;
+export const {
+  NODE_ENV,
+  PORT,
+  HOST,
+  DB_URI,
+  CLIENT_URL,
+  JWT_ACCESS_SECRET,
+  JWT_ACCESS_EXPIRED,
+  JWT_VERIFY_SECRET,
+  JWT_VERIFY_EXPIRED,
+  MAIL_USER,
+  MAIL_PASS,
+} = envVars;
