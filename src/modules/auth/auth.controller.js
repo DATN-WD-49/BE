@@ -7,6 +7,7 @@ import {
   registerService,
   resetPasswordService,
   verifyUserService,
+  sendVerifyService,
 } from "./auth.service.js";
 export const register = handleAsync(async (req, res, next) => {
   const user = await registerService(req.body);
@@ -25,4 +26,10 @@ export const resetPassword = handleAsync(async (req, res) => {
   const { email } = req.body;
   const response = await resetPasswordService(email);
   return createResponse(res, 200, AUTH_MESSAGES.RESETPASS_SUCCESS, response);
+});
+
+export const sendVerify = handleAsync(async (req, res) => {
+  const { email } = req.body;
+  const response = await sendVerifyService(email);
+  return createResponse(res, 200, AUTH_MESSAGES.SEND_VERIFY_SUCCESS, response);
 });
