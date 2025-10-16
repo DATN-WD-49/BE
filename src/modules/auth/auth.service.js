@@ -9,12 +9,20 @@ import {
   throwIfDuplicate,
 } from "../../common/utils/create-response.js";
 import { MAIL_MESSAGES } from "../mail/mail.messages.js";
-import { getVerifyTemplateMail } from "../mail/mail.template.js";
+import {
+  getVerifyTemplateMail,
+  getResetPasswordTemplateMail,
+} from "../mail/mail.template.js";
 import { sendMail } from "../mail/sendMail.js";
 import User from "../user/user.model.js";
 import jwt from "jsonwebtoken";
 import { AUTH_MESSAGES } from "./auth.messages.js";
-import { comparePassword, generateToken, hashPassword } from "./auth.utils.js";
+import {
+  comparePassword,
+  generateToken,
+  hashPassword,
+  generateRandomPassword,
+} from "./auth.utils.js";
 
 export const registerService = async (payload) => {
   const { userName, email, phone, password } = payload;
@@ -118,4 +126,24 @@ export const verifyUserService = async (token) => {
       }),
     };
   }
+};
+
+export const resetPasswordService = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throwError(400, AUTH_MESSAGES.NOTFOUND_USER);
+  }
+  const newPassword = generateRandomPassword(8);
+  const hashNewPassword = await hashPassword(newPassword);
+  user.password = hashNewPassword;
+  await user.save();
+  await sendMail(
+    email,
+    MAIL_MESSAGES.RESETPASSWORD_SEND,
+    getResetPasswordTemplateMail({
+      email,
+      password: newPassword,
+    }),
+  );
+  return user;
 };

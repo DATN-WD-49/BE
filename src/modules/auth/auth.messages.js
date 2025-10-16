@@ -9,5 +9,8 @@ export const AUTH_MESSAGES = {
   NOT_VERIFIED: "Tài khoản của bạn chưa được xác thực!",
   LOGIN_SUCCESS: "Đăng nhập thành công!",
   VERIFIED_SUCCESS: "Xác thực tài khoản thành công!",
-  NOTFOUND_USER: "Không tìm t hấy tài khoản của bạn!",
+  NOTFOUND_USER: "Không tìm thấy tài khoản của bạn!",
+  RESETPASS_SUCCESS:
+    "Vui lòng kiểm tra email chúng tôi đã gửi mật khẩu mới tới email của bạn",
+  VALIDATE_ERROR: "ERROR_VALIDATE",
 };
