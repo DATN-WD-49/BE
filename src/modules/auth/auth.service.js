@@ -1,5 +1,8 @@
+import jwt from "jsonwebtoken";
 import {
   API_URL,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_REDIRECT_URL,
   JWT_ACCESS_EXPIRED,
   JWT_ACCESS_SECRET,
   JWT_VERIFY_EXPIRED,
@@ -16,13 +19,14 @@ import {
 } from "../mail/mail.template.js";
 import { sendMail } from "../mail/sendMail.js";
 import User from "../user/user.model.js";
-import jwt from "jsonwebtoken";
+
 import { AUTH_MESSAGES } from "./auth.messages.js";
 import {
   comparePassword,
   generateToken,
   hashPassword,
   generateRandomPassword,
+  getResponseGoogle,
 } from "./auth.utils.js";
 
 export const registerService = async (payload) => {
@@ -170,4 +174,63 @@ export const sendVerifyService = async (email) => {
     }),
   );
   return findUser;
+};
+
+export const loginGoogleService = async () => {
+  const scope = ["openid", "email", "profile"].join(" ");
+  const oauthUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URL)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&access_type=offline` +
+    `&prompt=consent`;
+  return oauthUrl;
+};
+
+export const callbackLoginGoogleService = async (code) => {
+  try {
+    const {
+      sub: googleId,
+      email,
+      name: userName,
+      picture: avatar,
+    } = await getResponseGoogle(code);
+
+    let user = await User.findOne({ googleId });
+    if (!user) {
+      const exitingUserByEmail = await User.findOne({ email });
+      if (exitingUserByEmail) {
+        exitingUserByEmail.googleId = googleId;
+        exitingUserByEmail.provider.push("google");
+        exitingUserByEmail.isVerified = true;
+        await exitingUserByEmail.save();
+        user = exitingUserByEmail;
+      }
+      if (!exitingUserByEmail) {
+        user = new User({
+          googleId,
+          email,
+          userName,
+          avatar,
+          provider: ["google"],
+          isVerified: true,
+        });
+        await user.save();
+      }
+    }
+    const payload = {
+      _id: user._id,
+      role: user.role,
+    };
+    const accessToken = generateToken(
+      payload,
+      JWT_ACCESS_SECRET,
+      JWT_ACCESS_EXPIRED,
+    );
+    return { success: true, user: user.toObject(), accessToken };
+  } catch (error) {
+    return { success: false, data: "server" };
+  }
 };
