@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_URI,
+  GOOGLE_REDIRECT_URL,
 } from "../../common/configs/environment.js";
 import axios from "axios";
 
@@ -49,11 +49,11 @@ export const getResponseGoogle = async (code) => {
     null,
     {
       params: {
-        clien_id: GOOGLE_CLIENT_ID,
+        client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         code,
         grant_type: "authorization_code",
-        redirect_uri: GOOGLE_REDIRECT_URI,
+        redirect_uri: GOOGLE_REDIRECT_URL,
       },
     },
   );

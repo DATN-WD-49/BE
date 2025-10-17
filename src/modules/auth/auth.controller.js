@@ -49,6 +49,7 @@ export const callbackLoginGoogle = handleAsync(async (req, res) => {
   }
   const response = await callbackLoginGoogleService(code);
   if (!response.success) {
+    console.log(response);
     return res.redirect(`${CLIENT_URL}/auth/login?error=${response.data}`);
   }
 
