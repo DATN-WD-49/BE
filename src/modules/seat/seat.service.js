@@ -8,22 +8,39 @@ import { SEAT_MESSAGES } from "./seat.messages.js";
 import Seat from "./seat.model.js";
 import { populate } from "dotenv";
 import { assign } from "nodemailer/lib/shared/index.js";
+import { meta } from "eslint-plugin-prettier";
 
 export const getSeatCarService = async (carId, query) => {
+  const { groupFloor, ...ortherQuery } = query;
   const data = await queryBuilder(
     Seat,
     {
       sort: "seatOrder",
       order: "asc",
-      ...query,
-      carId,
       disablePagination: true,
+      ...ortherQuery,
+      carId,
     },
     {
       populate: [{ path: "carId", select: "name licensePlate" }],
     },
   );
-  return data;
+  // return data;
+  const grouped = data.data.reduce((acc, seat) => {
+    if (!acc[seat.floor]) acc[seat.floor] = [];
+    acc[seat.floor].push(seat);
+    return acc;
+  }, {});
+  const getCols = (seats) => {
+    if (!Array.isArray(seats) || seats.length === 0) return 0;
+    return Math.max(...seats.map((s) => s.col || 1));
+  };
+  const newResponse = Object.entries(grouped).map(([floor, seats]) => ({
+    floor: Number(floor),
+    cols: getCols(seats),
+    seats,
+  }));
+  return { data: groupFloor ? newResponse : data.meta, meta: data.meta };
 };
 
 export const updateSeatService = async (id, payload) => {
