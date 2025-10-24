@@ -8,6 +8,7 @@ import notFoundHandler from "./src/common/middlewares/not-found.middleware.js";
 import routes from "./src/routes.js";
 import { checkVersion } from "./src/common/configs/node-version.js";
 import connectDB from "./src/common/configs/database.js";
+import { normalizeQueryParams } from "./src/common/middlewares/normalquery.middle.js";
 
 checkVersion();
 
@@ -20,7 +21,7 @@ if (NODE_ENV === "development") {
   console.log("Morgan Dev Running");
   app.use(morgan("dev"));
 }
-
+app.use(normalizeQueryParams);
 app.get("/", (_, res) => res.json("hello world"));
 app.use("/api", routes);
 
