@@ -6,9 +6,6 @@ import {
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { SEAT_MESSAGES } from "./seat.messages.js";
 import Seat from "./seat.model.js";
-import { populate } from "dotenv";
-import { assign } from "nodemailer/lib/shared/index.js";
-import { meta } from "eslint-plugin-prettier";
 
 export const getSeatCarService = async (carId, query) => {
   const { groupFloor, ...ortherQuery } = query;
@@ -25,7 +22,6 @@ export const getSeatCarService = async (carId, query) => {
       populate: [{ path: "carId", select: "name licensePlate" }],
     },
   );
-  // return data;
   const grouped = data.data.reduce((acc, seat) => {
     if (!acc[seat.floor]) acc[seat.floor] = [];
     acc[seat.floor].push(seat);
@@ -40,7 +36,7 @@ export const getSeatCarService = async (carId, query) => {
     cols: getCols(seats),
     seats,
   }));
-  return { data: groupFloor ? newResponse : data.meta, meta: data.meta };
+  return { data: groupFloor ? newResponse : data.data, meta: data.meta };
 };
 
 export const updateSeatService = async (id, payload) => {
