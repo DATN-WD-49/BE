@@ -4,6 +4,8 @@ import {
 } from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { regexLower } from "../../common/utils/regex.js";
+import Seat from "../seat/seat.model.js";
+import { generateSeat } from "../seat/seat.utils.js";
 import { CAR_MESSAGES } from "./car.messages.js";
 import Car from "./car.model.js";
 
@@ -40,6 +42,11 @@ export const createCarService = async (payload) => {
     );
   }
   const car = await Car.create(payload);
+  const { allSeats, totalSeats } = await generateSeat(car._id, payload.floors);
+  await Seat.insertMany(allSeats);
+  car.maxSeatCapacity = totalSeats;
+  car.totalFloor = payload.floors.length;
+  await car.save();
   return car;
 };
 
