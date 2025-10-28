@@ -6,7 +6,7 @@ import {
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { SEAT_MESSAGES } from "./seat.messages.js";
 import Seat from "./seat.model.js";
-import { ensureUniqueSeatLabel } from "./seat.utils.js";
+import { ensureUniqueSeatLabel, generateSeat } from "./seat.utils.js";
 import Car from "../car/car.model.js";
 
 export const getSeatCarService = async (carId, query) => {
@@ -33,9 +33,14 @@ export const getSeatCarService = async (carId, query) => {
     if (!Array.isArray(seats) || seats.length === 0) return 0;
     return Math.max(...seats.map((s) => s.col || 1));
   };
+  const getRows = (seats) => {
+    if (!Array.isArray(seats) || seats.length === 0) return 0;
+    return Math.max(...seats.map((s) => s.row || 1));
+  };
   const newResponse = Object.entries(grouped).map(([floor, seats]) => ({
     floor: Number(floor),
     cols: getCols(seats),
+    rows: getRows(seats),
     seats,
   }));
   return { data: groupFloor ? newResponse : data.data, meta: data.meta };
@@ -122,4 +127,59 @@ export const deleteSeatService = async (seatId) => {
     $inc: { maxSeatCapacity: -1 },
   });
   return deleted;
+};
+
+export const createFloorService = async (carId, payload) => {
+  const { allSeats, totalSeats } = await generateSeat(
+    carId,
+    payload.floors,
+    payload.floorNumber,
+  );
+  const createdSeats = await Seat.insertMany(allSeats);
+  await Car.findByIdAndUpdate(
+    carId,
+    {
+      $inc: {
+        maxSeatCapacity: totalSeats,
+      },
+      totalFloor: payload.floorNumber,
+    },
+    { new: true },
+  );
+  return createdSeats;
+};
+
+export const deleteFloorService = async (seatIds, carId) => {
+  const response = await Seat.deleteMany({ _id: { $in: seatIds }, carId });
+  if (response.deletedCount === 0) {
+    throwError(400, SEAT_MESSAGES.DELETED_FAIL_FLOOR);
+  }
+
+  await Car.findByIdAndUpdate(
+    carId,
+    {
+      $inc: {
+        maxSeatCapacity: -response.deletedCount,
+        totalFloor: -1,
+      },
+    },
+    { new: true },
+  );
+
+  return {
+    data: null,
+    message: SEAT_MESSAGES.DELETED_FLOOR(response.deletedCount),
+  };
+};
+
+export const updateStatusFloorService = async (seatIds, carId, status) => {
+  const seats = await Seat.find({ _id: { $in: seatIds }, carId });
+  const updates = seats.map((seat) => ({
+    updateOne: {
+      filter: { _id: seat._id },
+      update: { $set: { status: status } },
+    },
+  }));
+  await Seat.bulkWrite(updates);
+  return { data: { status } };
 };

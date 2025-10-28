@@ -1,11 +1,16 @@
 import { ROOT_MESSAGES } from "../../common/constants/messages.js";
 import handleAsync from "../../common/utils/async-handler.js";
-import createResponse from "../../common/utils/create-response.js";
+import createResponse, {
+  throwError,
+} from "../../common/utils/create-response.js";
 import { SEAT_MESSAGES } from "./seat.messages.js";
 import {
+  createFloorService,
   createSeatService,
+  deleteFloorService,
   deleteSeatService,
   getSeatCarService,
+  updateStatusFloorService,
   updateSeatService,
   updateStatusSeatService,
 } from "./seat.service.js";
@@ -48,4 +53,37 @@ export const deleteSeat = handleAsync(async (req, res) => {
   const { id } = req.params;
   const response = await deleteSeatService(id);
   return createResponse(res, 200, SEAT_MESSAGES.DELETED_SEAT, response);
+});
+
+export const createFloor = handleAsync(async (req, res) => {
+  const { carId, ...payload } = req.body;
+  const data = await createFloorService(carId, payload);
+  return createResponse(res, 201, ROOT_MESSAGES.OK, data);
+});
+
+export const deleteFloor = handleAsync(async (req, res) => {
+  const { seatIds, carId } = req.body;
+  if (!seatIds || seatIds.length === 0) {
+    throwError(400, SEAT_MESSAGES.NOTFOUND_DELETE);
+  }
+  const data = await deleteFloorService(seatIds, carId);
+  return createResponse(res, 200, data.message, data.data);
+});
+
+export const updateStatusFloor = handleAsync(async (req, res) => {
+  const { seatIds, carId, status } = req.body;
+  if (!seatIds || seatIds.length === 0) {
+    throwError(400, SEAT_MESSAGES.NOTFOUND_DELETE);
+  }
+  const data = await updateStatusFloorService(seatIds, carId, status);
+  console.log(data);
+  console.log(data.status);
+  return createResponse(
+    res,
+    200,
+    data.data.status
+      ? SEAT_MESSAGES.ACTIVE_FLOOR
+      : SEAT_MESSAGES.DEACTIVE_FLOOR,
+    data.data,
+  );
 });
