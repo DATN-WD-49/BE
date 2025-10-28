@@ -3,6 +3,8 @@ import handleAsync from "../../common/utils/async-handler.js";
 import createResponse from "../../common/utils/create-response.js";
 import { SEAT_MESSAGES } from "./seat.messages.js";
 import {
+  createSeatService,
+  deleteSeatService,
   getSeatCarService,
   updateSeatService,
   updateStatusSeatService,
@@ -13,6 +15,12 @@ export const getCarSeat = handleAsync(async (req, res) => {
   const query = req.query;
   const { data, meta } = await getSeatCarService(carId, query);
   return createResponse(res, 200, ROOT_MESSAGES.OK, data, meta);
+});
+
+export const createSeat = handleAsync(async (req, res) => {
+  const payload = req.body;
+  const response = await createSeatService(payload);
+  return createResponse(res, 201, SEAT_MESSAGES.CREATED, response);
 });
 
 export const updateSeat = handleAsync(async (req, res) => {
@@ -34,4 +42,10 @@ export const updateStatusSeat = handleAsync(async (req, res) => {
     response.status ? SEAT_MESSAGES.ACTIVATED : SEAT_MESSAGES.DEACTIVATED,
     response,
   );
+});
+
+export const deleteSeat = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  const response = await deleteSeatService(id);
+  return createResponse(res, 200, SEAT_MESSAGES.DELETED_SEAT, response);
 });
