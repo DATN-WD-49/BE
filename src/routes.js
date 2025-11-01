@@ -5,7 +5,7 @@ import { authenticate } from "./common/middlewares/auth.middleware.js";
 import { JWT_ACCESS_SECRET } from "./common/configs/environment.js";
 import carRoute from "./modules/car/car.routes.js";
 import seatRoute from "./modules/seat/seat.routes.js";
-import routeRoadRoute from "./modules/route/route.routes.js";
+import routeRoadRoute from "./modules/route/route.route.js";
 
 const routes = Router();
 routes.use("/auth", authRoute);
