@@ -11,10 +11,6 @@ const modelSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    engine: {
-      type: String,
-      required: true,
-    },
   },
   {
     timestamps: false,
@@ -25,11 +21,6 @@ const modelSchema = new mongoose.Schema(
 
 const carSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      min: 3,
-    },
     licensePlate: {
       type: String,
       required: true,
