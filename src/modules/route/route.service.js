@@ -4,6 +4,7 @@ import {
 } from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { regexLower } from "../../common/utils/regex.js";
+import { updateStatusManySchedule } from "../schedule/schedule.service.js";
 import { ROUTE_MESSAGES } from "./route.messages.js";
 import Route from "./route.model.js";
 import { checkDuplicateRoute } from "./route.utils.js";
@@ -57,5 +58,25 @@ export const updateStatusRouteService = async (id) => {
   if (!findRoute) throwError(400, ROUTE_MESSAGES.NOT_FOUND_ROUTE);
   findRoute.status = !findRoute.status;
   await findRoute.save();
+  const updatedSchedule = updateStatusManySchedule(
+    "routeId",
+    id,
+    findRoute.status,
+  );
   return findRoute;
+};
+
+export const getPointService = async (pickupPointId) => {
+  const conditional = pickupPointId ? { "pickupPoint._id": pickupPointId } : {};
+  const pointPick = pickupPointId ? "dropPoint" : "pickupPoint";
+  const routes = await Route.find(conditional).lean();
+  const pointUnique = new Map();
+  routes.forEach((item) => {
+    if (!pointUnique.has(item[pointPick]._id)) {
+      pointUnique.set(item[pointPick]._id.toString(), {
+        ...item[pointPick],
+      });
+    }
+  });
+  return [...pointUnique.values()];
 };
