@@ -59,3 +59,20 @@ export const updateStatusRouteService = async (id) => {
   await findRoute.save();
   return findRoute;
 };
+
+export const getPointService = async (pickupPointId) => {
+  const conditional = pickupPointId
+    ? { "pickupPoint. _id": pickupPointId }
+    : {};
+  const pointPick = pickupPointId ? "dropPoint" : "pickupPoint";
+  const routes = await Route.find(conditional).lean();
+  const pointUnique = new Map();
+  routes.forEach((item) => {
+    if (!pointUnique.has(item[pointPick]._id)) {
+      pointUnique.set(item[pointPick]._id.toString(), {
+        ...item[pointPick],
+      });
+    }
+  });
+  return [...pointUnique.values()];
+};

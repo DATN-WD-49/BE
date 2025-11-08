@@ -7,6 +7,7 @@ import {
   createRouteService,
   getAllRouteService,
   getDetailRouteService,
+  getPointService,
   updateRouteService,
   updateStatusRouteService,
 } from "./route.service.js";
@@ -57,3 +58,11 @@ export const updateStatusRoute = handleAsync(async (req, res) => {
     response,
   );
 });
+
+export const getPoint = handleAsync(async (req, res) => {
+  const { pickupPointId } = req.query;
+  const data = await getPointService(pickupPointId);
+  return createResponse(res, 200, ROOT_MESSAGES.OK, data);
+});
+
+export const getDropPoint = handleAsync(async (req, res) => {});
