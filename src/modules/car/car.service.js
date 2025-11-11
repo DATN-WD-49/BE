@@ -4,6 +4,7 @@ import {
 } from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { regexLower } from "../../common/utils/regex.js";
+import { updateStatusManySchedule } from "../schedule/schedule.service.js";
 import Seat from "../seat/seat.model.js";
 import { generateSeat } from "../seat/seat.utils.js";
 import { CAR_MESSAGES } from "./car.messages.js";
@@ -68,5 +69,10 @@ export const updateStatusCarService = async (id) => {
   }
   car.status = !car.status;
   await car.save();
+  const updatedSchedule = await updateStatusManySchedule(
+    "carId",
+    id,
+    car.status,
+  );
   return car;
 };

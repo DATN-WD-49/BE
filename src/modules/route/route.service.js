@@ -58,11 +58,11 @@ export const updateStatusRouteService = async (id) => {
   if (!findRoute) throwError(400, ROUTE_MESSAGES.NOT_FOUND_ROUTE);
   findRoute.status = !findRoute.status;
   await findRoute.save();
-  // const updatedSchedule = updateStatusManySchedule(
-  //   "routeId",
-  //   id,
-  //   findRoute.status,
-  // );
+  const updatedSchedule = updateStatusManySchedule(
+    "routeId",
+    id,
+    findRoute.status,
+  );
   return findRoute;
 };
 
