@@ -3,5 +3,8 @@
   "prettier.configPath": "./.prettierrc",
   "javascript.suggest.autoImports": true,
   "typescript.suggest.autoImports": true,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }
