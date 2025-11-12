@@ -23,6 +23,18 @@ export const getAllProvince = handleAsync(async (req, res) => {
   return createResponse(res, 200, ROOT_MESSAGES.OK, newResponse);
 });
 
+export const getWardByProvince = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  const { data } = await axios.get(
+    `https://production.cas.so/address-kit/2025-07-01/provinces/${id}/communes`,
+  );
+  const newResponse = data?.communes?.map((item) => ({
+    label: item.name,
+    _id: item.code,
+  }));
+  return createResponse(res, 200, ROOT_MESSAGES.OK, newResponse);
+});
+
 export const getAllRoute = handleAsync(async (req, res) => {
   const query = req.query;
   const { data, meta } = await getAllRouteService(query);
@@ -65,4 +77,4 @@ export const getPoint = handleAsync(async (req, res) => {
   return createResponse(res, 200, ROOT_MESSAGES.OK, data);
 });
 
-export const getDropPoint = handleAsync(async (req, res) => {});
+export const getDropPoint = handleAsync(async (req, res) => { });
