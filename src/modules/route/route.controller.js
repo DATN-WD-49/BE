@@ -77,4 +77,4 @@ export const getPoint = handleAsync(async (req, res) => {
   return createResponse(res, 200, ROOT_MESSAGES.OK, data);
 });
 
-export const getDropPoint = handleAsync(async (req, res) => { });
+export const getDropPoint = handleAsync(async (req, res) => {});
