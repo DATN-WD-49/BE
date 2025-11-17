@@ -76,11 +76,6 @@ export const updateStatusRouteService = async (id) => {
     id,
     findRoute.status,
   );
-  // const updatedSchedule = updateStatusManySchedule(
-  //   "routeId",
-  //   id,
-  //   findRoute.status,
-  // );
   return findRoute;
 };
 
