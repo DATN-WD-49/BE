@@ -14,9 +14,9 @@ export const SCHEDULE_MESSAGES = {
   ROUTE_NOT_AVAILABLE:
     "tuyến đường tutowng ứng với lịch chạy này đang không khả dụng!",
   CREATE_MANY_SCHEDULE: (successLength, failedLength) => {
-    var message = `Đã tiến hành tạo ${successLength + failedLength} lịch chạy. `;
-    message += successLength > 0 ? `Success : ${successLength}, ` : ``;
-    message += failedLength > 0 ? `Failed : ${failedLength}` : ``;
+    var message = `Đã xem xét ${successLength + failedLength} lịch chạy. `;
+    message += successLength > 0 ? `Có thể tạo : ${successLength}, ` : ``;
+    message += failedLength > 0 ? `Bị xung đột : ${failedLength}` : ``;
     return message;
   },
 };
