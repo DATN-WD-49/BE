@@ -34,13 +34,19 @@ export const createManySchedule = handleAsync(async (req, res) => {
   const response = await createManyScheduleService(payload);
   return createResponse(
     res,
-    201,
+    200,
     SCHEDULE_MESSAGES.CREATE_MANY_SCHEDULE(
       response.createdSchedules.length,
       response.failedSchedules.length,
     ),
     response,
   );
+});
+
+export const insertManySchedule = handleAsync(async (req, res) => {
+  const payload = req.body;
+  const response = [];
+  return createResponse(res, 201, "Ta biết nó không hoạt động", response);
 });
 
 export const updateSchedule = handleAsync(async (req, res) => {
