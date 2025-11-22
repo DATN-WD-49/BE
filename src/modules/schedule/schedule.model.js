@@ -19,8 +19,23 @@ const scheduleSchema = new mongoose.Schema(
     arrivalTime: {
       type: Date,
     },
+    crew: [
+      {
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+        role: {
+          type: String,
+          enum: ["driver", "assistant"],
+          required: true,
+        },
+      },
+    ],
     price: {
       type: Number,
+    },
+    weekdays: {
+      type: [Number],
+      default: [],
     },
     status: {
       type: Boolean,

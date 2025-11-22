@@ -1,24 +1,53 @@
+import dayjs from "dayjs";
 import { throwError } from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import Car from "../car/car.model.js";
 import Route from "../route/route.model.js";
 import { SCHEDULE_MESSAGES } from "./schedule.messages.js";
 import Schedule from "./schedule.model.js";
-import { checkConflictTime } from "./schedule.utils.js";
+import { checkConflictTime, getArrivalTime } from "./schedule.utils.js";
+
+const populatedSchedule = [
+  {
+    path: "carId",
+    select: "-createdAt -updatedAt",
+  },
+  {
+    path: "routeId",
+    select: "-createdAt -updatedAt",
+  },
+];
 
 export const getAllScheduleService = async (query) => {
-  const schedules = await queryBuilder(Schedule, query);
-  const populatedSchedules = await Schedule.populate(schedules.data, [
-    { path: "carId" },
-    { path: "routeId" },
-  ]);
+  const { groupSchedule, ...otherQuery } = query;
+  const schedules = await queryBuilder(
+    Schedule,
+    {
+      disablePagination: groupSchedule ? true : false,
+      ...otherQuery,
+    },
+    { populate: populatedSchedule },
+  );
+  if (groupSchedule) {
+    const groupSchedules = new Map();
+    for (const schedule of schedules.data) {
+      const key = `${schedule.carId._id} - ${schedule.routeId._id}`;
+      const existing = groupSchedules.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        groupSchedules.set(key, { ...schedule.toObject(), count: 1 });
+      }
+    }
+    return { data: [...groupSchedules.values()], meta: schedules.meta };
+  }
   return schedules;
 };
 
 export const getDetailScheduleService = async (id) => {
   const response = await Schedule.findById(id)
-    .populate("carId")
-    .populate("routeId")
+    .populate({ path: "carId", select: "-createdAt -updatedAt" })
+    .populate({ path: "routeId", select: "-createdAt -updatedAt" })
     .lean();
   if (!response) {
     throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
@@ -27,17 +56,13 @@ export const getDetailScheduleService = async (id) => {
 };
 
 export const createScheduleService = async (payload) => {
-  const { carId, routeId, startTime } = payload;
+  const { carId, routeId, startTime, backupTime = 2 } = payload;
+  //carId, routeId sẽ được chọn như thế nào?
   const startT = new Date(startTime);
-  const backupTime = 2;
-  const { duration } = await Route.findById(routeId);
-  const arrivalT = new Date(
-    startT.getTime() + (duration + backupTime) * 3600000,
-  );
+  const arrivalT = await getArrivalTime(routeId, startT, backupTime);
   const scheduleConflict = await checkConflictTime(carId, startT, arrivalT);
   if (scheduleConflict) {
     throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
-    //có nên làm cái gì đấy để người dùng chọn giữ cái nào không?
   }
   payload.arrivalTime = arrivalT;
   const createdSchedule = await Schedule.create(payload);
@@ -45,63 +70,65 @@ export const createScheduleService = async (payload) => {
 };
 
 export const createManyScheduleService = async (payload) => {
-  const { carId, routeId, startTime, untilTime } = payload;
-  const startT = new Date(startTime);
-  const untilT = new Date(untilTime);
-
-  const baseHour = startT.getHours();
-  const baseMinute = startT.getMinutes();
-  const baseSecond = startT.getSeconds();
-
-  const route = await Route.findById(routeId).lean();
-  const { duration } = route;
+  const { carId, routeId, startTime, untilTime, weekdays } = payload;
+  const beginTime = new Date(startTime);
+  const beginTimeHour = beginTime.getHours();
+  const beginTimeMinute = beginTime.getMinutes();
+  const untilendTime = new Date(untilTime);
   const backupTime = 2;
 
   const createdSchedules = [];
   const failedSchedules = [];
 
-  let currentStart = new Date(startT);
+  let curentScheduleStartTime = new Date(beginTime);
 
-  while (currentStart <= untilT) {
-    try {
-      const newPayload = {
-        ...payload,
-        startTime: new Date(currentStart),
-      };
+  while (curentScheduleStartTime <= untilendTime) {
+    let checkweekday = dayjs(curentScheduleStartTime);
+    if (!weekdays || weekdays.includes(checkweekday.day())) {
+      const newPayload = { ...payload };
+      newPayload.startTime = new Date(curentScheduleStartTime);
+      newPayload.arrivalTime = await getArrivalTime(
+        routeId,
+        new Date(curentScheduleStartTime),
+        backupTime,
+      );
+      delete newPayload.untilTime;
 
-      const schedule = await createScheduleService(newPayload);
-      createdSchedules.push(schedule);
+      const conflictSchedule = await checkConflictTime(
+        carId,
+        newPayload.startTime,
+        newPayload.arrivalTime,
+      );
 
-      const arrivalT = new Date(schedule.arrivalTime);
-      currentStart = new Date(arrivalT);
-      currentStart.setDate(arrivalT.getDate() + 1);
-      currentStart.setHours(baseHour, baseMinute, baseSecond, 0);
-    } catch (error) {
-      failedSchedules.push({
-        dayConflict: new Date(currentStart),
-        carId: carId,
-        routeId: routeId,
-      });
+      if (conflictSchedule) {
+        failedSchedules.push(newPayload);
+      } else {
+        createdSchedules.push(newPayload);
+      }
 
-      const skipMs = (duration + backupTime) * 3600000;
-      const skipDay = new Date(currentStart.getTime() + skipMs);
-      skipDay.setDate(skipDay.getDate() + 1);
-      skipDay.setHours(baseHour, baseMinute, baseSecond, 0);
-      currentStart = skipDay;
+      curentScheduleStartTime = new Date(
+        newPayload.arrivalTime.getFullYear(),
+        newPayload.arrivalTime.getMonth(),
+        newPayload.arrivalTime.getDate(),
+        beginTimeHour,
+        beginTimeMinute,
+        0,
+        0,
+      );
+      curentScheduleStartTime.setDate(curentScheduleStartTime.getDate() + 1);
+      console.log(curentScheduleStartTime);
+    } else {
+      curentScheduleStartTime.setDate(curentScheduleStartTime.getDate() + 1);
     }
   }
-  console.log(createdSchedules.length, failedSchedules.length);
+
   return { createdSchedules, failedSchedules };
 };
 
 export const updateScheduleService = async (id, payload) => {
-  const { carId, routeId, startTime } = payload;
+  const { carId, routeId, startTime, backupTime = 2 } = payload;
   const startT = new Date(startTime);
-  const backupTime = 2;
-  const { duration } = await Route.findById(routeId);
-  const arrivalT = new Date(
-    startT.getTime() + (duration + backupTime) * 3600000,
-  );
+  const arrivalT = await getArrivalTime(routeId, startT, backupTime);
   const scheduleConflict = await checkConflictTime(carId, startT, arrivalT, id);
   if (scheduleConflict) {
     throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE(scheduleConflict));
