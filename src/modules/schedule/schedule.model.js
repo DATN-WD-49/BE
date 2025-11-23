@@ -48,7 +48,7 @@ const scheduleSchema = new mongoose.Schema(
       type: String,
       enum: [
         "pending",
-        "comfirmed",
+        "confirmed",
         "running",
         "completed",
         "pendingCancel",

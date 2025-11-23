@@ -5,7 +5,11 @@ import Car from "../car/car.model.js";
 import Route from "../route/route.model.js";
 import { SCHEDULE_MESSAGES } from "./schedule.messages.js";
 import Schedule from "./schedule.model.js";
-import { checkConflictTime, getArrivalTime } from "./schedule.utils.js";
+import {
+  checkConflictTime,
+  groupedSchedules,
+  getArrivalTime,
+} from "./schedule.utils.js";
 
 const populatedSchedule = [
   {
@@ -15,6 +19,10 @@ const populatedSchedule = [
   {
     path: "routeId",
     select: "-createdAt -updatedAt",
+  },
+  {
+    path: "crew.userId",
+    select: "userName email phone",
   },
 ];
 
@@ -29,17 +37,7 @@ export const getAllScheduleService = async (query) => {
     { populate: populatedSchedule },
   );
   if (groupSchedule) {
-    const groupSchedules = new Map();
-    for (const schedule of schedules.data) {
-      const key = `${schedule.carId._id} - ${schedule.routeId._id}`;
-      const existing = groupSchedules.get(key);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        groupSchedules.set(key, { ...schedule.toObject(), count: 1 });
-      }
-    }
-    return { data: [...groupSchedules.values()], meta: schedules.meta };
+    return groupedSchedules(schedules.data, query);
   }
   return schedules;
 };

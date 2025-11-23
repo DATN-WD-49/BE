@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import Route from "../route/route.model.js";
 import { SCHEDULE_MESSAGES } from "./schedule.messages.js";
 import Schedule from "./schedule.model.js";
+import { meta } from "eslint-plugin-prettier";
 
 export const checkConflictTime = async (
   carId,
@@ -92,4 +93,72 @@ export const generateManySchedules = async (payload) => {
     currentStart = resetTime(currentStart.add(1, "day"));
   }
   return { createdSchedules, failedSchedules };
+};
+
+export const groupedSchedules = (schedules, query) => {
+  const groupSchedules = new Map();
+  for (const schedule of schedules) {
+    const dayOfWeek = new Date(schedule.startTime).getDay();
+    const key = `${schedule.carId._id} - ${schedule.routeId._id}`;
+    const existing = groupSchedules.get(key);
+    const allStatus = [
+      "pending",
+      "confirmed",
+      "running",
+      "completed",
+      "pendingCancel",
+      "cancelled",
+    ];
+    if (existing) {
+      existing.count++;
+      existing.activeCount += schedule.isDisable === false ? 1 : 0;
+      existing.inActiveCount += schedule.isDisable === true ? 1 : 0;
+      existing.statusCount[schedule.status] =
+        (existing.statusCount[schedule.status] || 0) + 1;
+      if (!existing.dayOfWeek.includes(dayOfWeek)) {
+        existing.dayOfWeek.push(dayOfWeek);
+        existing.dayOfWeek.sort((a, b) => {
+          if (a === 0) return 1;
+          if (b === 0) return -1;
+          return a - b;
+        });
+      }
+    } else {
+      groupSchedules.set(key, {
+        ...schedule.toObject(),
+        count: 1,
+        statusCount: Object.fromEntries(
+          allStatus.map((sta) => [sta, schedule.status === sta ? 1 : 0]),
+        ),
+        activeCount: schedule.isDisable === false ? 1 : 0,
+        inActiveCount: schedule.isDisable === true ? 1 : 0,
+        dayOfWeek: [dayOfWeek],
+      });
+    }
+  }
+  const groupedArray = [...groupSchedules.values()];
+  const page = Number(query?.page || 1);
+  const limit = Number(query?.limit || 10);
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  const paginatedData = groupedArray.slice(start, end);
+
+  return {
+    data: paginatedData,
+    meta: {
+      page,
+      limit,
+      total: groupedArray.length,
+      totalPages: Math.ceil(groupedArray.length / limit),
+    },
+  };
+};
+
+export const getArrivalTime = async (routeID, startTime, backupTime) => {
+  const startT = new Date(startTime);
+  const { duration } = await Route.findById(routeID);
+  const arrivalT = new Date(
+    startT.getTime() + (duration + backupTime) * 3600000,
+  );
+  return arrivalT;
 };
