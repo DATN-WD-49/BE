@@ -1,5 +1,23 @@
 import mongoose from "mongoose";
 
+const crewSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: function () {
+        return this.role === "driver";
+      },
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ["driver", "assistant"],
+    },
+  },
+  { _id: false, versionKey: false, timestamps: false },
+);
+
 const scheduleSchema = new mongoose.Schema(
   {
     carId: {
@@ -19,32 +37,35 @@ const scheduleSchema = new mongoose.Schema(
     arrivalTime: {
       type: Date,
     },
-    crew: [
-      {
-        name: { type: String, required: true },
-        phone: { type: String, required: true },
-        role: {
-          type: String,
-          enum: ["driver", "assistant"],
-          required: true,
-        },
-      },
-    ],
+    crew: [crewSchema],
     price: {
       type: Number,
     },
-    weekdays: {
-      type: [Number],
-      default: [],
+    dayOfWeek: {
+      type: Number,
     },
     status: {
-      type: Boolean,
-      default: true,
+      type: String,
+      enum: [
+        "pending",
+        "comfirmed",
+        "running",
+        "completed",
+        "pendingCancel",
+        "cancelled",
+      ],
+      default: "pending",
     },
     isDisable: {
       type: Boolean,
       default: false,
     },
+    disableBy: {
+      type: String,
+      emum: ["service", "handle"],
+      default: "service",
+    },
+    cancelDescription: String,
   },
   {
     versionKey: false,
