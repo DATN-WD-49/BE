@@ -54,16 +54,26 @@ export const getDetailScheduleService = async (id) => {
 };
 
 export const createScheduleService = async (payload) => {
-  const { carId, routeId, startTime, backupTime = 2 } = payload;
+  const { carId, routeId, startTime, crew } = payload;
   //carId, routeId sẽ được chọn như thế nào?
   const startT = new Date(startTime);
+  const backupTime = 0;
   const arrivalT = await getArrivalTime(routeId, startT, backupTime);
-  const scheduleConflict = await checkConflictTime(carId, startT, arrivalT);
+  const crewIds = crew.map((cr) => cr.userId);
+  const scheduleConflict = await checkConflictTime(
+    carId,
+    crewIds,
+    startT,
+    arrivalT,
+  );
   if (scheduleConflict) {
-    throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
+    throwError(400, scheduleConflict.message);
   }
   payload.arrivalTime = arrivalT;
-  const createdSchedule = await Schedule.create(payload);
+  const createdSchedule = await Schedule.create({
+    dayOfWeek: startT.getDay(),
+    ...payload,
+  });
   return createdSchedule;
 };
 
@@ -124,16 +134,28 @@ export const createManyScheduleService = async (payload) => {
 };
 
 export const updateScheduleService = async (id, payload) => {
-  const { carId, routeId, startTime, backupTime = 2 } = payload;
+  const { carId, routeId, startTime, crew } = payload;
   const startT = new Date(startTime);
+  const backupTime = 0;
   const arrivalT = await getArrivalTime(routeId, startT, backupTime);
-  const scheduleConflict = await checkConflictTime(carId, startT, arrivalT, id);
+  const crewIds = crew.map((cr) => cr.userId);
+  const scheduleConflict = await checkConflictTime(
+    carId,
+    crewIds,
+    startT,
+    arrivalT,
+    id,
+  );
   if (scheduleConflict) {
     throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE(scheduleConflict));
     //có nên làm cái gì đấy để người dùng chọn giữ cái nào không?
   }
   payload.arrivalTime = arrivalT;
   // Nếu như schedule này đã có người đặt thì sao?
+  if (payload.status === "cancelled") {
+    payload.isDisable = true;
+    payload.disableBy = "handle";
+  }
   const updated = await Schedule.findByIdAndUpdate(id, payload, { new: true });
   return updated;
 };
