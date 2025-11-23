@@ -35,7 +35,7 @@ export const createManySchedule = handleAsync(async (req, res) => {
   return createResponse(
     res,
     200,
-    SCHEDULE_MESSAGES.CREATE_MANY_SCHEDULE(
+    SCHEDULE_MESSAGES.CREATE_MANY_ERROR_SCHEDULE(
       response.createdSchedules.length,
       response.failedSchedules.length,
     ),

@@ -13,10 +13,10 @@ export const SCHEDULE_MESSAGES = {
   CAR_NOT_AVAILABLE: "Chiếc xe phụ trách lịch chạy này đang không hoạt động!",
   ROUTE_NOT_AVAILABLE:
     "tuyến đường tutowng ứng với lịch chạy này đang không khả dụng!",
-  CREATE_MANY_SCHEDULE: (successLength, failedLength) => {
-    var message = `Đã xem xét ${successLength + failedLength} lịch chạy. `;
-    message += successLength > 0 ? `Có thể tạo : ${successLength}, ` : ``;
-    message += failedLength > 0 ? `Bị xung đột : ${failedLength}` : ``;
-    return message;
+  CREATE_MANY_SCHEDULE: (successLength) => {
+    return `Đã tạo thành công : ${successLength} lịch chạy `;
+  },
+  CREATE_MANY_ERROR_SCHEDULE: (successLength, failedLength) => {
+    return `Tạo lịch chạy thất bại do có${successLength}${failedLength} lịch chạy tạo thất bại trong ${successLength + failedLength} lịch chạy`;
   },
 };
