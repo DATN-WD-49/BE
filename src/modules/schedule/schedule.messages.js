@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const SCHEDULE_MESSAGES = {
   NOT_FOUND_SCHEDULE: "Không tìm thấy lịch chạy tương ứng!",
   // CONFLICT_SCHEDULE: (conflict) => {
@@ -11,6 +13,12 @@ export const SCHEDULE_MESSAGES = {
   ACTIVATED: "Lịch chạy này đã hoạt động trở lại!",
   DEACTIVATED: "Lịch chạy này đã bị khóa!",
   CAR_NOT_AVAILABLE: "Chiếc xe phụ trách lịch chạy này đang không hoạt động!",
+  CAR_CONFLICT: (conflictCar) => {
+    return `Xe ${conflictCar.carId.licensePlate} đã có lịch vào lúc ${dayjs(conflictCar.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
+  },
+  CREW_CONFLICT: (conflict, conflictCrews) => {
+    return `Nhân sự ${conflictCrews.map((crew) => crew.userName).join(",")} đã có lịch vào lúc ${dayjs(conflict.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
+  },
   ROUTE_NOT_AVAILABLE:
     "tuyến đường tutowng ứng với lịch chạy này đang không khả dụng!",
   CREATE_MANY_SCHEDULE: (successLength) => {
