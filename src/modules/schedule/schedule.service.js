@@ -174,38 +174,70 @@ export const updateStatusManySchedule = async (
 ) => {
   const schedules = await Schedule.find({
     [filterKey]: filterValue,
-    isDisable: { $ne: true },
-  }).lean();
+  })
+    .populate(populatedSchedule[0])
+    .populate(populatedSchedule[1])
+    .lean();
   if (!schedules?.length) throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
 
   if (!newStatus) {
-    return await Schedule.updateMany(
-      { [filterKey]: filterValue },
-      { $set: { status: false } },
+    const results = await Schedule.updateMany(
+      { [filterKey]: filterValue, disableBy: "service" },
+      { $set: { isDisable: true } },
     );
+    return results;
   }
 
-  const results = await Promise.allSettled(
-    schedules.map(
-      async ({ _id, carId, routeId, startTime, arrivalTime, isDisable }) => {
-        const [conflict, route, car] = await Promise.all([
-          checkConflictTime(carId, startTime, arrivalTime, _id),
-          Route.findById(routeId).lean(),
-          Car.findById(carId).lean(),
-        ]);
+  let unlockScheduleSuccess = 0;
+  let unlockScheduleFailed = [];
 
-        if (conflict)
-          throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE(conflict));
-        if (!route?.status)
-          throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
-        if (!car?.status) throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
-        if (!isDisable) {
-          await Schedule.findByIdAndUpdate(_id, { $set: { status: true } });
-        }
-        return _id;
-      },
-    ),
+  const results = await Promise.allSettled(
+    schedules.map(async (schedule) => {
+      const {
+        _id,
+        carId,
+        crew,
+        routeId,
+        startTime,
+        arrivalTime,
+        disableBy,
+        status,
+      } = schedule;
+      const crewIds = crew.map((cr) => cr.userId);
+      const [conflict, route, car] = await Promise.all([
+        checkConflictTime(carId, crewIds, startTime, arrivalTime, _id),
+        Route.findById(routeId._id).lean(),
+        Car.findById(carId._id).lean(),
+      ]);
+
+      if (conflict) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
+      }
+      if (!route?.status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
+      }
+      if (!car?.status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
+      }
+      if (disableBy === "handle") {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.DISABLE_BY_HANDLE);
+      }
+      if (status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
+      }
+      await Schedule.findOneAndUpdate(
+        { _id, disableBy: "service" },
+        { $set: { status: true } },
+      );
+      unlockScheduleSuccess += 1;
+      return _id;
+    }),
   );
 
-  return results;
+  return { results, unlockScheduleSuccess, unlockScheduleFailed };
 };
