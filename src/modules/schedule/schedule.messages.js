@@ -20,11 +20,12 @@ export const SCHEDULE_MESSAGES = {
     return `Nhân sự ${conflictCrews.map((crew) => crew.userName).join(",")} đã có lịch vào lúc ${dayjs(conflict.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
   },
   ROUTE_NOT_AVAILABLE:
-    "tuyến đường tutowng ứng với lịch chạy này đang không khả dụng!",
+    "tuyến đường tương ứng với lịch chạy này đang không khả dụng!",
+  DISABLE_BY_HANDLE: "Lịch chạy này đã bị khóa trước đó",
   CREATE_MANY_SCHEDULE: (successLength) => {
     return `Đã tạo thành công : ${successLength} lịch chạy `;
   },
-  CREATE_MANY_ERROR_SCHEDULE: (successLength, failedLength) => {
-    return `Tạo lịch chạy thất bại do có${successLength}${failedLength} lịch chạy tạo thất bại trong ${successLength + failedLength} lịch chạy`;
+  CREATE_MANY_ERROR_SCHEDULE: (totalLength, failedLength) => {
+    return `Tạo lịch chạy thất bại do có ${failedLength} lịch chạy tạo thất bại trong ${totalLength} lịch chạy`;
   },
 };

@@ -32,13 +32,16 @@ export const createSchedule = handleAsync(async (req, res) => {
 export const createManySchedule = handleAsync(async (req, res) => {
   const payload = req.body;
   const response = await createManyScheduleService(payload);
+  const createdLength = response.createdSchedules.length;
+  const failedLength = response.failedSchedules.length;
+  const totalLength = createdLength + failedLength;
+  const isHavingError = failedLength > 0;
   return createResponse(
     res,
-    200,
-    SCHEDULE_MESSAGES.CREATE_MANY_ERROR_SCHEDULE(
-      response.createdSchedules.length,
-      response.failedSchedules.length,
-    ),
+    isHavingError > 0 ? 400 : 201,
+    isHavingError
+      ? SCHEDULE_MESSAGES.CREATE_MANY_ERROR_SCHEDULE(totalLength, failedLength)
+      : SCHEDULE_MESSAGES.CREATE_MANY_SCHEDULE(createdLength),
     response,
   );
 });

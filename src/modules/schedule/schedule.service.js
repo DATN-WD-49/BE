@@ -9,6 +9,7 @@ import {
   checkConflictTime,
   groupedSchedules,
   getArrivalTime,
+  generateManySchedules,
 } from "./schedule.utils.js";
 
 const populatedSchedule = [
@@ -78,58 +79,13 @@ export const createScheduleService = async (payload) => {
 };
 
 export const createManyScheduleService = async (payload) => {
-  const { carId, routeId, startTime, untilTime, weekdays } = payload;
-  const beginTime = new Date(startTime);
-  const beginTimeHour = beginTime.getHours();
-  const beginTimeMinute = beginTime.getMinutes();
-  const untilendTime = new Date(untilTime);
-  const backupTime = 2;
-
-  const createdSchedules = [];
-  const failedSchedules = [];
-
-  let curentScheduleStartTime = new Date(beginTime);
-
-  while (curentScheduleStartTime <= untilendTime) {
-    let checkweekday = dayjs(curentScheduleStartTime);
-    if (!weekdays || weekdays.includes(checkweekday.day())) {
-      const newPayload = { ...payload };
-      newPayload.startTime = new Date(curentScheduleStartTime);
-      newPayload.arrivalTime = await getArrivalTime(
-        routeId,
-        new Date(curentScheduleStartTime),
-        backupTime,
-      );
-      delete newPayload.untilTime;
-
-      const conflictSchedule = await checkConflictTime(
-        carId,
-        newPayload.startTime,
-        newPayload.arrivalTime,
-      );
-
-      if (conflictSchedule) {
-        failedSchedules.push(newPayload);
-      } else {
-        createdSchedules.push(newPayload);
-      }
-
-      curentScheduleStartTime = new Date(
-        newPayload.arrivalTime.getFullYear(),
-        newPayload.arrivalTime.getMonth(),
-        newPayload.arrivalTime.getDate(),
-        beginTimeHour,
-        beginTimeMinute,
-        0,
-        0,
-      );
-      curentScheduleStartTime.setDate(curentScheduleStartTime.getDate() + 1);
-      console.log(curentScheduleStartTime);
-    } else {
-      curentScheduleStartTime.setDate(curentScheduleStartTime.getDate() + 1);
-    }
+  const { createdSchedules, failedSchedules } =
+    await generateManySchedules(payload);
+  const isHavingFailed = failedSchedules.length !== 0;
+  let schedules = null;
+  if (!isHavingFailed) {
+    schedules = await Schedule.insertMany(createdSchedules);
   }
-
   return { createdSchedules, failedSchedules };
 };
 
