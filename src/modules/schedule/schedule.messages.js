@@ -9,6 +9,7 @@ export const SCHEDULE_MESSAGES = {
   // },
   CONFLICT_SCHEDULE: `Lịch chạy này xung đột với lịch bạn định tạo!`,
   CREATED_SCHEDULE: "Lịch chạy đã được tạo thành công!",
+  CREATE_FAILED_SCHEDULE: "Tạo lịch chạy thất bại do trùng thời gian",
   UPDATED_SCHEDULE: "Lịch chạy đã được cập nhật thành công!",
   ACTIVATED: "Lịch chạy này đã hoạt động trở lại!",
   DEACTIVATED: "Lịch chạy này đã bị khóa!",

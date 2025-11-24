@@ -89,6 +89,23 @@ export const createManyScheduleService = async (payload) => {
   return { createdSchedules, failedSchedules };
 };
 
+export const insertContinueManyScheduleService = async (payload) => {
+  for (const schedule of payload) {
+    const { carId, arrivalTime, startTime, crew } = payload;
+    const crewIds = crew.map((cr) => cr._id);
+    const conflict = await checkConflictTime(
+      carId,
+      crewIds,
+      startTime,
+      arrivalTime,
+    );
+    if (conflict) {
+      throwError(400, SCHEDULE_MESSAGES.CREATE_FAILED_SCHEDULE);
+    }
+  }
+  return await Schedule.insertMany(payload);
+};
+
 export const updateScheduleService = async (id, payload) => {
   const { carId, routeId, startTime, crew } = payload;
   const startT = new Date(startTime);
