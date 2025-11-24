@@ -136,15 +136,17 @@ export const updateScheduleService = async (id, payload) => {
 export const updateStatusScheduleService = async (id) => {
   const schedule = await Schedule.findById(id).lean();
   if (!schedule) throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
-  const { status, carId, routeId, startTime, arrivalTime, isDisable } =
-    schedule;
-  if (!status) {
+  if (schedule.status === "cancelled") {
+    throwError(400, SCHEDULE_MESSAGES.CANCELLED_SCHEDULE);
+  }
+  const { carId, crew, routeId, startTime, arrivalTime, isDisable } = schedule;
+  const crewIds = crew.map((cr) => cr.userId);
+  if (isDisable) {
     const [conflict, route, car] = await Promise.all([
-      checkConflictTime(carId, startTime, arrivalTime, id),
+      checkConflictTime(carId, crewIds, startTime, arrivalTime, id),
       Route.findById(routeId).lean(),
       Car.findById(carId).lean(),
     ]);
-    checkConflictTime(carId, startTime, arrivalTime, id);
     if (conflict) throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
     if (!route || !route.status)
       throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
@@ -154,7 +156,12 @@ export const updateStatusScheduleService = async (id) => {
   // Nếu như schedule này đã có người đặt thì sao?
   const updated = await Schedule.findByIdAndUpdate(
     id,
-    { $set: { status: !status, isDisable: !isDisable } },
+    {
+      $set: {
+        isDisable: !isDisable,
+        disableBy: isDisable ? "service" : "handle",
+      },
+    },
     { new: true },
   );
   return updated;

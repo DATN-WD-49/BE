@@ -7,6 +7,7 @@ import {
   createScheduleService,
   getAllScheduleService,
   getDetailScheduleService,
+  insertContinueManyScheduleService,
   updateScheduleService,
   updateStatusScheduleService,
 } from "./schedule.service.js";
@@ -46,10 +47,15 @@ export const createManySchedule = handleAsync(async (req, res) => {
   );
 });
 
-export const insertManySchedule = handleAsync(async (req, res) => {
+export const insertContinueManySchedule = handleAsync(async (req, res) => {
   const payload = req.body;
-  const response = [];
-  return createResponse(res, 201, "Ta biết nó không hoạt động", response);
+  const createdSchedules = await insertContinueManyScheduleService(payload);
+  return createResponse(
+    res,
+    201,
+    SCHEDULE_MESSAGES.CREATE_MANY_SCHEDULE(createdSchedules.length),
+    createdSchedules,
+  );
 });
 
 export const updateSchedule = handleAsync(async (req, res) => {
@@ -65,7 +71,7 @@ export const updateStatusSchedule = handleAsync(async (req, res) => {
   return createResponse(
     res,
     200,
-    response.status
+    !response.isDisable
       ? SCHEDULE_MESSAGES.ACTIVATED
       : SCHEDULE_MESSAGES.DEACTIVATED,
     response,
