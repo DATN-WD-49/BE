@@ -70,10 +70,11 @@ export const updateStatusCarService = async (id) => {
   }
   car.status = !car.status;
   await car.save();
-  const updatedSchedule = await updateStatusManySchedule(
-    "carId",
-    id,
-    car.status,
-  );
-  return car;
+  const { unlockScheduleSuccess, unlockScheduleFailed } =
+    await updateStatusManySchedule("carId", id, car.status);
+  return {
+    ...car.toObject(),
+    unlockScheduleSuccess,
+    unlockScheduleFailed,
+  };
 };
