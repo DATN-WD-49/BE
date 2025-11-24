@@ -1,8 +1,11 @@
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore.js";
 import Route from "../route/route.model.js";
 import { SCHEDULE_MESSAGES } from "./schedule.messages.js";
 import Schedule from "./schedule.model.js";
-import { meta } from "eslint-plugin-prettier";
+import "dayjs/locale/vi.js";
+dayjs.extend(isSameOrBefore);
+dayjs.locale("vi");
 
 export const checkConflictTime = async (
   carId,
@@ -51,8 +54,12 @@ export const generateManySchedules = async (payload) => {
   const failedSchedules = [];
   const route = await Route.findById(routeId).lean();
   const { duration } = route;
-  let currentStart = startDay;
-  const resetTime = (date) => {
+
+  let currentStart = startDay.clone();
+  console.log("currentStart:", currentStart);
+  console.log("is dayjs?", typeof currentStart.isSameOrBefore);
+  const resetTime = (dat) => {
+    const date = dat.clone();
     if (fixedHour) {
       return date
         .hour(fixedHour.hour)
@@ -67,30 +74,30 @@ export const generateManySchedules = async (payload) => {
   while (currentStart.isSameOrBefore(endDay, "day")) {
     const currentDay = currentStart.day();
     if (!dayOfWeek.includes(currentDay)) {
-      currentStart = resetTime(currentStart.add(1, "day"));
+      currentStart = resetTime(currentStart.clone().add(1, "day"));
       continue;
     }
-    const startT = resetTime(currentStart);
-    const arrvialT = startT.add(duration, "hour");
+    const startT = resetTime(currentStart.clone());
+    const arrivalT = startT.clone().add(duration, "hour");
     const crewIds = crew.map((item) => item.userId);
     const conflict = await checkConflictTime(
       carId,
       crewIds,
       startT.toDate(),
-      arrvialT.toDate(),
+      arrivalT.toDate(),
     );
     if (!conflict) {
       createdSchedules.push({
         ...payload,
         startTime: startT.toDate(),
-        arrivalTime: arrvialT.toDate(),
+        arrivalTime: arrivalT.toDate(),
         dayOfWeek: currentDay,
       });
     }
     if (conflict) {
       failedSchedules.push(conflict);
     }
-    currentStart = resetTime(currentStart.add(1, "day"));
+    currentStart = resetTime(currentStart.clone().add(1, "day"));
   }
   return { createdSchedules, failedSchedules };
 };

@@ -91,7 +91,8 @@ export const createManyScheduleService = async (payload) => {
 
 export const insertContinueManyScheduleService = async (payload) => {
   for (const schedule of payload) {
-    const { carId, arrivalTime, startTime, crew } = payload;
+    const { carId, arrivalTime, startTime, crew } = schedule;
+    console.log(crew);
     const crewIds = crew.map((cr) => cr._id);
     const conflict = await checkConflictTime(
       carId,
