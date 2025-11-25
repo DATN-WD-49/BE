@@ -1,24 +1,52 @@
+import dayjs from "dayjs";
 import { throwError } from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import Car from "../car/car.model.js";
 import Route from "../route/route.model.js";
 import { SCHEDULE_MESSAGES } from "./schedule.messages.js";
 import Schedule from "./schedule.model.js";
-import { checkConflictTime } from "./schedule.utils.js";
+import {
+  checkConflictTime,
+  groupedSchedules,
+  getArrivalTime,
+  generateManySchedules,
+} from "./schedule.utils.js";
+
+const populatedSchedule = [
+  {
+    path: "carId",
+    select: "-createdAt -updatedAt",
+  },
+  {
+    path: "routeId",
+    select: "-createdAt -updatedAt",
+  },
+  {
+    path: "crew.userId",
+    select: "userName email phone",
+  },
+];
 
 export const getAllScheduleService = async (query) => {
-  const schedules = await queryBuilder(Schedule, query);
-  const populatedSchedules = await Schedule.populate(schedules.data, [
-    { path: "carId" },
-    { path: "routeId" },
-  ]);
+  const { groupSchedule, ...otherQuery } = query;
+  const schedules = await queryBuilder(
+    Schedule,
+    {
+      disablePagination: groupSchedule ? true : false,
+      ...otherQuery,
+    },
+    { populate: populatedSchedule },
+  );
+  if (groupSchedule) {
+    return groupedSchedules(schedules.data, query);
+  }
   return schedules;
 };
 
 export const getDetailScheduleService = async (id) => {
   const response = await Schedule.findById(id)
-    .populate("carId")
-    .populate("routeId")
+    .populate({ path: "carId", select: "-createdAt -updatedAt" })
+    .populate({ path: "routeId", select: "-createdAt -updatedAt" })
     .lean();
   if (!response) {
     throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
@@ -27,88 +55,81 @@ export const getDetailScheduleService = async (id) => {
 };
 
 export const createScheduleService = async (payload) => {
-  const { carId, routeId, startTime } = payload;
+  const { carId, routeId, startTime, crew } = payload;
+  //carId, routeId sẽ được chọn như thế nào?
   const startT = new Date(startTime);
-  const backupTime = 2;
-  const { duration } = await Route.findById(routeId);
-  const arrivalT = new Date(
-    startT.getTime() + (duration + backupTime) * 3600000,
+  const backupTime = 0;
+  const arrivalT = await getArrivalTime(routeId, startT, backupTime);
+  const crewIds = crew.map((cr) => cr.userId);
+  const scheduleConflict = await checkConflictTime(
+    carId,
+    crewIds,
+    startT,
+    arrivalT,
   );
-  const scheduleConflict = await checkConflictTime(carId, startT, arrivalT);
   if (scheduleConflict) {
-    throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
-    //có nên làm cái gì đấy để người dùng chọn giữ cái nào không?
+    throwError(400, scheduleConflict.message);
   }
   payload.arrivalTime = arrivalT;
-  const createdSchedule = await Schedule.create(payload);
+  const createdSchedule = await Schedule.create({
+    dayOfWeek: startT.getDay(),
+    ...payload,
+  });
   return createdSchedule;
 };
 
 export const createManyScheduleService = async (payload) => {
-  const { carId, routeId, startTime, untilTime } = payload;
-  const startT = new Date(startTime);
-  const untilT = new Date(untilTime);
-
-  const baseHour = startT.getHours();
-  const baseMinute = startT.getMinutes();
-  const baseSecond = startT.getSeconds();
-
-  const route = await Route.findById(routeId).lean();
-  const { duration } = route;
-  const backupTime = 2;
-
-  const createdSchedules = [];
-  const failedSchedules = [];
-
-  let currentStart = new Date(startT);
-
-  while (currentStart <= untilT) {
-    try {
-      const newPayload = {
-        ...payload,
-        startTime: new Date(currentStart),
-      };
-
-      const schedule = await createScheduleService(newPayload);
-      createdSchedules.push(schedule);
-
-      const arrivalT = new Date(schedule.arrivalTime);
-      currentStart = new Date(arrivalT);
-      currentStart.setDate(arrivalT.getDate() + 1);
-      currentStart.setHours(baseHour, baseMinute, baseSecond, 0);
-    } catch (error) {
-      failedSchedules.push({
-        dayConflict: new Date(currentStart),
-        carId: carId,
-        routeId: routeId,
-      });
-
-      const skipMs = (duration + backupTime) * 3600000;
-      const skipDay = new Date(currentStart.getTime() + skipMs);
-      skipDay.setDate(skipDay.getDate() + 1);
-      skipDay.setHours(baseHour, baseMinute, baseSecond, 0);
-      currentStart = skipDay;
-    }
+  const { createdSchedules, failedSchedules } =
+    await generateManySchedules(payload);
+  const isHavingFailed = failedSchedules.length !== 0;
+  let schedules = null;
+  if (!isHavingFailed) {
+    schedules = await Schedule.insertMany(createdSchedules);
   }
-  console.log(createdSchedules.length, failedSchedules.length);
   return { createdSchedules, failedSchedules };
 };
 
+export const insertContinueManyScheduleService = async (payload) => {
+  for (const schedule of payload) {
+    const { carId, arrivalTime, startTime, crew } = schedule;
+    console.log(crew);
+    const crewIds = crew.map((cr) => cr._id);
+    const conflict = await checkConflictTime(
+      carId,
+      crewIds,
+      startTime,
+      arrivalTime,
+    );
+    if (conflict) {
+      throwError(400, SCHEDULE_MESSAGES.CREATE_FAILED_SCHEDULE);
+    }
+  }
+  return await Schedule.insertMany(payload);
+};
+
 export const updateScheduleService = async (id, payload) => {
-  const { carId, routeId, startTime } = payload;
+  const { carId, routeId, startTime, crew } = payload;
   const startT = new Date(startTime);
-  const backupTime = 2;
-  const { duration } = await Route.findById(routeId);
-  const arrivalT = new Date(
-    startT.getTime() + (duration + backupTime) * 3600000,
+  const backupTime = 0;
+  const arrivalT = await getArrivalTime(routeId, startT, backupTime);
+  const crewIds = crew.map((cr) => cr.userId);
+  const scheduleConflict = await checkConflictTime(
+    carId,
+    crewIds,
+    startT,
+    arrivalT,
+    id,
   );
-  const scheduleConflict = await checkConflictTime(carId, startT, arrivalT, id);
   if (scheduleConflict) {
     throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE(scheduleConflict));
     //có nên làm cái gì đấy để người dùng chọn giữ cái nào không?
   }
   payload.arrivalTime = arrivalT;
   // Nếu như schedule này đã có người đặt thì sao?
+  if (payload.status === "cancelled") {
+    payload.isDisable = true;
+    payload.disableBy = "handle";
+  }
   const updated = await Schedule.findByIdAndUpdate(id, payload, { new: true });
   return updated;
 };
@@ -116,15 +137,17 @@ export const updateScheduleService = async (id, payload) => {
 export const updateStatusScheduleService = async (id) => {
   const schedule = await Schedule.findById(id).lean();
   if (!schedule) throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
-  const { status, carId, routeId, startTime, arrivalTime, isDisable } =
-    schedule;
-  if (!status) {
+  if (schedule.status === "cancelled") {
+    throwError(400, SCHEDULE_MESSAGES.CANCELLED_SCHEDULE);
+  }
+  const { carId, crew, routeId, startTime, arrivalTime, isDisable } = schedule;
+  const crewIds = crew.map((cr) => cr.userId);
+  if (isDisable) {
     const [conflict, route, car] = await Promise.all([
-      checkConflictTime(carId, startTime, arrivalTime, id),
+      checkConflictTime(carId, crewIds, startTime, arrivalTime, id),
       Route.findById(routeId).lean(),
       Car.findById(carId).lean(),
     ]);
-    checkConflictTime(carId, startTime, arrivalTime, id);
     if (conflict) throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
     if (!route || !route.status)
       throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
@@ -134,7 +157,12 @@ export const updateStatusScheduleService = async (id) => {
   // Nếu như schedule này đã có người đặt thì sao?
   const updated = await Schedule.findByIdAndUpdate(
     id,
-    { $set: { status: !status, isDisable: !isDisable } },
+    {
+      $set: {
+        isDisable: !isDisable,
+        disableBy: isDisable ? "service" : "handle",
+      },
+    },
     { new: true },
   );
   return updated;
@@ -147,38 +175,70 @@ export const updateStatusManySchedule = async (
 ) => {
   const schedules = await Schedule.find({
     [filterKey]: filterValue,
-    isDisable: { $ne: true },
-  }).lean();
+  })
+    .populate(populatedSchedule[0])
+    .populate(populatedSchedule[1])
+    .lean();
   if (!schedules?.length) throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
 
   if (!newStatus) {
-    return await Schedule.updateMany(
-      { [filterKey]: filterValue },
-      { $set: { status: false } },
+    const results = await Schedule.updateMany(
+      { [filterKey]: filterValue, disableBy: "service" },
+      { $set: { isDisable: true } },
     );
+    return results;
   }
 
-  const results = await Promise.allSettled(
-    schedules.map(
-      async ({ _id, carId, routeId, startTime, arrivalTime, isDisable }) => {
-        const [conflict, route, car] = await Promise.all([
-          checkConflictTime(carId, startTime, arrivalTime, _id),
-          Route.findById(routeId).lean(),
-          Car.findById(carId).lean(),
-        ]);
+  let unlockScheduleSuccess = 0;
+  let unlockScheduleFailed = [];
 
-        if (conflict)
-          throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE(conflict));
-        if (!route?.status)
-          throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
-        if (!car?.status) throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
-        if (!isDisable) {
-          await Schedule.findByIdAndUpdate(_id, { $set: { status: true } });
-        }
-        return _id;
-      },
-    ),
+  const results = await Promise.allSettled(
+    schedules.map(async (schedule) => {
+      const {
+        _id,
+        carId,
+        crew,
+        routeId,
+        startTime,
+        arrivalTime,
+        disableBy,
+        status,
+      } = schedule;
+      const crewIds = crew.map((cr) => cr.userId);
+      const [conflict, route, car] = await Promise.all([
+        checkConflictTime(carId, crewIds, startTime, arrivalTime, _id),
+        Route.findById(routeId._id).lean(),
+        Car.findById(carId._id).lean(),
+      ]);
+
+      if (conflict) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CONFLICT_SCHEDULE);
+      }
+      if (!route?.status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.ROUTE_NOT_AVAILABLE);
+      }
+      if (!car?.status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
+      }
+      if (disableBy === "handle") {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.DISABLE_BY_HANDLE);
+      }
+      if (status) {
+        unlockScheduleFailed += 1;
+        throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
+      }
+      await Schedule.findOneAndUpdate(
+        { _id, disableBy: "service" },
+        { $set: { status: true } },
+      );
+      unlockScheduleSuccess += 1;
+      return _id;
+    }),
   );
 
-  return results;
+  return { results, unlockScheduleSuccess, unlockScheduleFailed };
 };

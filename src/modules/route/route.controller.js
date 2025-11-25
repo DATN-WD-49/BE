@@ -63,10 +63,13 @@ export const updateRoute = handleAsync(async (req, res) => {
 export const updateStatusRoute = handleAsync(async (req, res) => {
   const { id } = req.params;
   const response = await updateStatusRouteService(id);
+  const { unlockScheduleSuccess, unlockScheduleFailed } = response;
   return createResponse(
     res,
     200,
-    response.status ? ROUTE_MESSAGES.ACTIVATED : ROUTE_MESSAGES.DEACTIVATED,
+    response.status
+      ? ROUTE_MESSAGES.ACTIVATED(unlockScheduleSuccess, unlockScheduleFailed)
+      : ROUTE_MESSAGES.DEACTIVATED,
     response,
   );
 });
@@ -76,5 +79,3 @@ export const getPoint = handleAsync(async (req, res) => {
   const data = await getPointService(pickupPointId);
   return createResponse(res, 200, ROOT_MESSAGES.OK, data);
 });
-
-export const getDropPoint = handleAsync(async (req, res) => {});

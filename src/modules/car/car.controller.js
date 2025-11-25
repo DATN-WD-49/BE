@@ -38,10 +38,13 @@ export const updateCar = handleAsync(async (req, res) => {
 export const updateStatusCar = handleAsync(async (req, res) => {
   const { id } = req.params;
   const response = await updateStatusCarService(id);
+  const { unlockScheduleSuccess, unlockScheduleFailed } = response;
   return createResponse(
     res,
     200,
-    response.status ? CAR_MESSAGES.ACTIVATED : CAR_MESSAGES.DEACTIVATED,
+    response.status
+      ? CAR_MESSAGES.ACTIVATED(unlockScheduleSuccess, unlockScheduleFailed)
+      : CAR_MESSAGES.DEACTIVATED,
     response,
   );
 });

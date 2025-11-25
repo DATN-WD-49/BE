@@ -47,6 +47,7 @@ export const createCarService = async (payload) => {
 
 export const updateCarService = async (id, payload) => {
   const existingCar = await Car.findOne({
+    _id: { $ne: payload.id },
     licensePlate: regexLower(payload.licensePlate),
   });
   if (existingCar) {
@@ -69,10 +70,11 @@ export const updateStatusCarService = async (id) => {
   }
   car.status = !car.status;
   await car.save();
-  const updatedSchedule = await updateStatusManySchedule(
-    "carId",
-    id,
-    car.status,
-  );
-  return car;
+  const { unlockScheduleSuccess, unlockScheduleFailed } =
+    await updateStatusManySchedule("carId", id, car.status);
+  return {
+    ...car.toObject(),
+    unlockScheduleSuccess,
+    unlockScheduleFailed,
+  };
 };
