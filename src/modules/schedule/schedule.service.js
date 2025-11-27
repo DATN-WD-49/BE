@@ -92,7 +92,6 @@ export const createManyScheduleService = async (payload) => {
 export const insertContinueManyScheduleService = async (payload) => {
   for (const schedule of payload) {
     const { carId, arrivalTime, startTime, crew } = schedule;
-    console.log(crew);
     const crewIds = crew.map((cr) => cr._id);
     const conflict = await checkConflictTime(
       carId,
@@ -173,14 +172,19 @@ export const updateStatusManySchedule = async (
   filterValue,
   newStatus,
 ) => {
+  let unlockScheduleSuccess = 0;
+  let unlockScheduleFailed = 0;
+
   const schedules = await Schedule.find({
     [filterKey]: filterValue,
   })
     .populate(populatedSchedule[0])
     .populate(populatedSchedule[1])
     .lean();
-  if (!schedules?.length) throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
-
+  if (!schedules?.length) {
+    // throwError(400, SCHEDULE_MESSAGES.NOT_FOUND_SCHEDULE);
+    return { unlockScheduleSuccess, unlockScheduleFailed };
+  }
   if (!newStatus) {
     const results = await Schedule.updateMany(
       { [filterKey]: filterValue, disableBy: "service" },
@@ -188,9 +192,6 @@ export const updateStatusManySchedule = async (
     );
     return results;
   }
-
-  let unlockScheduleSuccess = 0;
-  let unlockScheduleFailed = [];
 
   const results = await Promise.allSettled(
     schedules.map(async (schedule) => {
@@ -227,13 +228,14 @@ export const updateStatusManySchedule = async (
         unlockScheduleFailed += 1;
         throwError(400, SCHEDULE_MESSAGES.DISABLE_BY_HANDLE);
       }
-      if (status) {
+      if (status === "cancelled") {
         unlockScheduleFailed += 1;
-        throwError(400, SCHEDULE_MESSAGES.CAR_NOT_AVAILABLE);
+        throwError(400, SCHEDULE_MESSAGES.CANCELLED_SCHEDULE);
       }
+      // console.log(schedule);
       await Schedule.findOneAndUpdate(
         { _id, disableBy: "service" },
-        { $set: { status: true } },
+        { $set: { isDisable: false } },
       );
       unlockScheduleSuccess += 1;
       return _id;

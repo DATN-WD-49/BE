@@ -76,8 +76,6 @@ export const updateStatusFloor = handleAsync(async (req, res) => {
     throwError(400, SEAT_MESSAGES.NOTFOUND_DELETE);
   }
   const data = await updateStatusFloorService(seatIds, carId, status);
-  console.log(data);
-  console.log(data.status);
   return createResponse(
     res,
     200,
