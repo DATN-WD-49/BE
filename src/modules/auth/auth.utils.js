@@ -43,7 +43,6 @@ export const generateRandomPassword = (length = 8) => {
 };
 
 export const getResponseGoogle = async (code) => {
-  console.log(code);
   const { data: tokenResponse } = await axios.post(
     "https://oauth2.googleapis.com/token",
     null,

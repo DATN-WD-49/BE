@@ -70,6 +70,7 @@ export const updateStatusRoute = handleAsync(async (req, res) => {
     response.status
       ? ROUTE_MESSAGES.ACTIVATED(unlockScheduleSuccess, unlockScheduleFailed)
       : ROUTE_MESSAGES.DEACTIVATED,
+
     response,
   );
 });

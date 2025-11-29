@@ -7,6 +7,7 @@ import carRoute from "./modules/car/car.routes.js";
 import seatRoute from "./modules/seat/seat.routes.js";
 import routeRoadRoute from "./modules/route/route.route.js";
 import scheduleRoute from "./modules/schedule/schedule.routes.js";
+import seatScheduleRoute from "./modules/seat-schedule/seat-schedule.route.js";
 
 const routes = Router();
 routes.use("/auth", authRoute);
@@ -15,4 +16,5 @@ routes.use("/car", carRoute);
 routes.use("/seat", seatRoute);
 routes.use("/route", routeRoadRoute);
 routes.use("/schedule", scheduleRoute);
+routes.use("/seat-schedule", seatScheduleRoute);
 export default routes;

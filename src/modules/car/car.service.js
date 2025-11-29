@@ -47,7 +47,7 @@ export const createCarService = async (payload) => {
 
 export const updateCarService = async (id, payload) => {
   const existingCar = await Car.findOne({
-    _id: { $ne: payload.id },
+    _id: { $ne: id },
     licensePlate: regexLower(payload.licensePlate),
   });
   if (existingCar) {

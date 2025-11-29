@@ -56,8 +56,6 @@ export const generateManySchedules = async (payload) => {
   const { duration } = route;
 
   let currentStart = startDay.clone();
-  console.log("currentStart:", currentStart);
-  console.log("is dayjs?", typeof currentStart.isSameOrBefore);
   const resetTime = (dat) => {
     const date = dat.clone();
     if (fixedHour) {

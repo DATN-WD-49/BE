@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 
 export const SCHEDULE_MESSAGES = {
   NOT_FOUND_SCHEDULE: "Không tìm thấy lịch chạy tương ứng!",
-  CANCELLED_SCHEDULE: "Lịch chạy này đã bị huỷ không thể khoả hoặc mở khoá!",
+  CANCELLED_SCHEDULE: "Lịch chạy này đã bị huỷ không thể chỉnh sửa!",
   // CONFLICT_SCHEDULE: (conflict) => {
   //   return `Có một lịch chạy đang hoạt động bị xung đột thời gian với cái bạn định tạo!
   //   thông tin lịch chạy xung đôt : ${conflict}
