@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { throwError } from "../../common/utils/create-response.js";
 import { getIO } from "../../socket/socket.instance.js";
 import Schedule from "../schedule/schedule.model.js";
@@ -85,4 +86,29 @@ export const toggleSeatService = async (payload, userId) => {
     status: seat.status,
   });
   return seat;
+};
+
+export const unholdSeatService = async (userId) => {
+  const heldSeat = await SeatSchedule.find({
+    userId,
+    status: "hold",
+  }).lean();
+
+  if (heldSeat.length === 0) return 0;
+  const scheduleIds = [
+    ...new Set(heldSeat.map((seat) => String(seat.scheduleId))),
+  ];
+  const result = await SeatSchedule.deleteMany({
+    userId,
+    status: "hold",
+  });
+  const io = getIO();
+  scheduleIds.forEach((scheduleId) => {
+    io.to(scheduleId).emit("seatUpdated", {
+      message: SEAT_SCHEDULE_MESSAGE.EXPIRED_SEATS,
+      deletedCount: result.deletedCount,
+      timestamp: dayjs().toISOString(),
+    });
+  });
+  return result.deletedCount;
 };
