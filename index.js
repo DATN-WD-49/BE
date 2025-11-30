@@ -11,6 +11,7 @@ import connectDB from "./src/common/configs/database.js";
 import { normalizeQueryParams } from "./src/common/middlewares/normalquery.middle.js";
 import http from "http";
 import { initSocket } from "./src/socket/index.js";
+import { startJob } from "./src/modules/job/index.js";
 
 checkVersion();
 
@@ -38,6 +39,7 @@ connectDB()
     console.log("✓ Connected to MongoDB");
     server = http.createServer(app);
     initSocket(server);
+    startJob();
     server.listen(PORT, () => {
       console.log("Starting API Server");
       if (NODE_ENV === "development") {

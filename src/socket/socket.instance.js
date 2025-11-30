@@ -1,4 +1,4 @@
-import { throwError } from "../common/utils/create-response";
+import { throwError } from "../common/utils/create-response.js";
 
 let io = null;
 

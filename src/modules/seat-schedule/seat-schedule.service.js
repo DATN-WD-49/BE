@@ -1,5 +1,7 @@
+import dayjs from "dayjs";
 import { throwError } from "../../common/utils/create-response.js";
 import { getIO } from "../../socket/socket.instance.js";
+import Schedule from "../schedule/schedule.model.js";
 import Seat from "../seat/seat.model.js";
 import { SEAT_SCHEDULE_MESSAGE } from "./seat-schedule.message.js";
 import SeatSchedule from "./seat-schedule.model.js";
@@ -7,6 +9,7 @@ import SeatSchedule from "./seat-schedule.model.js";
 export const getSeatScheduleService = async (carId, scheduleId) => {
   const seats = await Seat.find({ carId }).lean();
   const seatSchedules = await SeatSchedule.find({ scheduleId }).lean();
+  const scheduleData = await Schedule.findById(scheduleId);
   const result = seats.map((seat) => {
     const schedule = seatSchedules.find(
       (sc) => sc.seatId.toString() === seat._id.toString(),
@@ -18,6 +21,7 @@ export const getSeatScheduleService = async (carId, scheduleId) => {
     return {
       ...seat,
       userId,
+      price: scheduleData.price,
       bookingStatus,
     };
   });
@@ -70,6 +74,10 @@ export const toggleSeatService = async (payload, userId) => {
       throwError(400, SEAT_SCHEDULE_MESSAGE.ALREADY_BOOKED);
     }
   }
+  const count = await SeatSchedule.countDocuments({ userId });
+  if (count === 4) {
+    throwError(400, SEAT_SCHEDULE_MESSAGE.ONLY_HOLD_FOUR);
+  }
   const seat = await SeatSchedule.create({ userId, ...payload });
   const io = getIO();
   io.to(payload.scheduleId.toString()).emit("seatUpdated", {
@@ -78,4 +86,29 @@ export const toggleSeatService = async (payload, userId) => {
     status: seat.status,
   });
   return seat;
+};
+
+export const unholdSeatService = async (userId) => {
+  const heldSeat = await SeatSchedule.find({
+    userId,
+    status: "hold",
+  }).lean();
+
+  if (heldSeat.length === 0) return 0;
+  const scheduleIds = [
+    ...new Set(heldSeat.map((seat) => String(seat.scheduleId))),
+  ];
+  const result = await SeatSchedule.deleteMany({
+    userId,
+    status: "hold",
+  });
+  const io = getIO();
+  scheduleIds.forEach((scheduleId) => {
+    io.to(scheduleId).emit("seatUpdated", {
+      message: SEAT_SCHEDULE_MESSAGE.EXPIRED_SEATS,
+      deletedCount: result.deletedCount,
+      timestamp: dayjs().toISOString(),
+    });
+  });
+  return result.deletedCount;
 };

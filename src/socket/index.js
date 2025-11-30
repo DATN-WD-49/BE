@@ -3,6 +3,7 @@ import { socketConfig } from "../common/configs/socket-config.js";
 import { setIO } from "./socket.instance.js";
 import authSocket from "./middleware/auth.socket.js";
 import seatSocket from "./modules/seat.socket.js";
+import { unholdSeatService } from "../modules/seat-schedule/seat-schedule.service.js";
 
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, socketConfig);
@@ -11,6 +12,10 @@ export const initSocket = (httpServer) => {
   io.on("connection", (socket) => {
     console.log(`Connected: ${socket.id}`);
     seatSocket(socket, io);
+    socket.on("closeTabCheckout", (data) => {
+      console.log("Client đóng tab:", socket.id, data);
+      unholdSeatService(data.userId);
+    });
     socket.on("disconnect", () => {
       console.log(`Disconnected: ${socket.id}`);
     });
