@@ -9,8 +9,8 @@ import {
 
 export const getSeatSchedule = handleAsync(async (req, res) => {
   const { carId, scheduleId } = req.params;
-  const seats = await getSeatScheduleService(carId, scheduleId);
-  return createResponse(res, 200, ROOT_MESSAGES.OK, seats);
+  const data = await getSeatScheduleService(carId, scheduleId);
+  return createResponse(res, 200, ROOT_MESSAGES.OK, data);
 });
 
 export const toggleSeat = handleAsync(async (req, res) => {
