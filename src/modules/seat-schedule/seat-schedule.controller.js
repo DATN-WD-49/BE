@@ -15,8 +15,8 @@ export const getSeatSchedule = handleAsync(async (req, res) => {
 
 export const toggleSeat = handleAsync(async (req, res) => {
   const { _id } = req.user;
-  const { payload } = req;
-  const data = await toggleSeatService(payload, _id);
+  const { body } = req;
+  const data = await toggleSeatService(body, _id);
   return createResponse(res, 201, ROOT_MESSAGES.OK, data);
 });
 

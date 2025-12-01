@@ -5,7 +5,7 @@ import cron from "node-cron";
 
 export const cleanExpiredSeats = async () => {
   try {
-    const now = dayjs.toDate();
+    const now = dayjs().toDate();
     const expiredSeats = await SeatSchedule.find({
       status: "hold",
       expiredHold: { $lt: now },
