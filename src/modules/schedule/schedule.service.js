@@ -232,7 +232,6 @@ export const updateStatusManySchedule = async (
         unlockScheduleFailed += 1;
         throwError(400, SCHEDULE_MESSAGES.CANCELLED_SCHEDULE);
       }
-      // console.log(schedule);
       await Schedule.findOneAndUpdate(
         { _id, disableBy: "service" },
         { $set: { isDisable: false } },
