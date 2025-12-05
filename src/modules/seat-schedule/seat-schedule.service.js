@@ -48,6 +48,9 @@ export const getSeatScheduleService = async (carId, scheduleId) => {
 };
 
 export const toggleSeatService = async (payload, userId) => {
+  const findSeat = await Seat.findById(payload.seatId);
+  if (!findSeat) throwError(400, "ghế này không tồn tại");
+  if (!findSeat.status) throwError(400, "Ghế này đã bị khóa");
   const existingSeat = await SeatSchedule.findOne({ seatId: payload.seatId });
 
   if (existingSeat) {
