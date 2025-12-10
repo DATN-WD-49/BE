@@ -51,7 +51,10 @@ export const toggleSeatService = async (payload, userId) => {
   const findSeat = await Seat.findById(payload.seatId);
   if (!findSeat) throwError(400, "ghế này không tồn tại");
   if (!findSeat.status) throwError(400, "Ghế này đã bị khóa");
-  const existingSeat = await SeatSchedule.findOne({ seatId: payload.seatId });
+  const existingSeat = await SeatSchedule.findOne({
+    seatId: payload.seatId,
+    scheduleId: payload.scheduleId,
+  });
 
   if (existingSeat) {
     if (existingSeat.userId.toString() !== userId.toString()) {
@@ -77,7 +80,7 @@ export const toggleSeatService = async (payload, userId) => {
       throwError(400, SEAT_SCHEDULE_MESSAGE.ALREADY_BOOKED);
     }
   }
-  const count = await SeatSchedule.countDocuments({ userId });
+  const count = await SeatSchedule.countDocuments({ userId, status: "hold" });
   if (count === 4) {
     throwError(400, SEAT_SCHEDULE_MESSAGE.ONLY_HOLD_FOUR);
   }
