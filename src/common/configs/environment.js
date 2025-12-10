@@ -19,6 +19,9 @@ const envVarsSchema = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
   GOOGLE_REDIRECT_URL: z.string(),
+  PAYOS_CLIENT_ID: z.string(),
+  PAYOS_API_KEY: z.string(),
+  PAYOS_CHECKSUM_KEY: z.string(),
 });
 const result = envVarsSchema.safeParse(process.env);
 if (!result.success) {
@@ -48,4 +51,7 @@ export const {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URL,
+  PAYOS_CLIENT_ID,
+  PAYOS_API_KEY,
+  PAYOS_CHECKSUM_KEY,
 } = envVars;
