@@ -76,6 +76,7 @@ export const updateStatusRoute = handleAsync(async (req, res) => {
 });
 
 export const getPoint = handleAsync(async (req, res) => {
+  console.log(req.query);
   const { pickupPointId } = req.query;
   const data = await getPointService(pickupPointId);
   return createResponse(res, 200, ROOT_MESSAGES.OK, data);

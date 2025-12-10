@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { boolean, string } from "zod";
 
 const modelSchema = new mongoose.Schema(
   {
