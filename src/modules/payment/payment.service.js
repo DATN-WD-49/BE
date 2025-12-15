@@ -2,6 +2,9 @@ import Order from "../order/order.model.js";
 import { throwError } from "../../common/utils/create-response.js";
 import { ORDER_MESSAGES } from "../order/order.message.js";
 import { PayOS } from "@payos/node";
+import { unholdSeatService } from "../seat-schedule/seat-schedule.service.js";
+import { updateBookedSeats } from "../seat-schedule/seat-schedule.utils.js";
+import Schedule from "../schedule/schedule.model.js";
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,
@@ -43,11 +46,21 @@ export const handlePayOSWebHookService = async (orderCode, status) => {
   if (!order) throwError(400, ORDER_MESSAGES.ORDER_NOT_FOUND);
   if (status === "PAID") {
     order.isPaid = true;
+    const seatIds = order.seats.map((seat) => seat.seatId);
+    const updatedCount = await updateBookedSeats(
+      order.userId,
+      order.scheduleId,
+      seatIds,
+    );
+    await Schedule.findByIdAndUpdate(order.scheduleId, {
+      $inc: { bookedCount: updatedCount.modifiedCount || 0 },
+    });
     await order.save();
   }
   if (status === "CANCELLED") {
+    await unholdSeatService(order.userId);
     await order.deleteOne();
   }
 
-  return order;
+  return status === "PAID" ? order : null;
 };
