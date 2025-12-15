@@ -80,7 +80,11 @@ export const toggleSeatService = async (payload, userId) => {
       throwError(400, SEAT_SCHEDULE_MESSAGE.ALREADY_BOOKED);
     }
   }
-  const count = await SeatSchedule.countDocuments({ userId, status: "hold" });
+  const count = await SeatSchedule.countDocuments({
+    userId,
+    scheduleId: payload.scheduleId,
+    status: "hold",
+  });
   if (count === 4) {
     throwError(400, SEAT_SCHEDULE_MESSAGE.ONLY_HOLD_FOUR);
   }
