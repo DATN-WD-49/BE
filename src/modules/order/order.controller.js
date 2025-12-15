@@ -17,8 +17,8 @@ export const getAllOrder = handleAsync(async (req, res) => {
 });
 
 export const getAllOrderByUser = handleAsync(async (req, res) => {
-  const { userId } = req.params;
-  const response = await getAllOrderByUserService(userId);
+  const { _id } = req.user;
+  const response = await getAllOrderByUserService(_id);
   return createResponse(res, 200, ROOT_MESSAGES.OK, response);
 });
 
