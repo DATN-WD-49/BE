@@ -15,4 +15,10 @@ export const AUTH_MESSAGES = {
   RESETPASS_SUCCESS:
     "Vui lòng kiểm tra email chúng tôi đã gửi mật khẩu mới tới email của bạn",
   VALIDATE_ERROR: "ERROR_VALIDATE",
+  CONFLICT_PASSWORD: "Hai trường nhập mật khẩu phải trùng nhau!",
+  UPDATED_USER: "Cập nhật thông tin người dùng thành công",
+  CREATED_STAFF: "Thêm nhân viên mới thành công",
+  CONFLICT_CREATESTAFF: (amount) => {
+    return `Có ${amount} người dùng bị trùng thông tin với thông tin bạn nhập`;
+  },
 };
