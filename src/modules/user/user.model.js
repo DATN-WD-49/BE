@@ -49,6 +49,16 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "staff", "admin"],
       default: "user",
     },
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
+    expiredBanned: {
+      type: Date,
+      required: function () {
+        return this.isLocked;
+      },
+    },
   },
   { timestamps: true, versionKey: false },
 );
