@@ -5,6 +5,9 @@ import { PayOS } from "@payos/node";
 import { unholdSeatService } from "../seat-schedule/seat-schedule.service.js";
 import { updateBookedSeats } from "../seat-schedule/seat-schedule.utils.js";
 import Schedule from "../schedule/schedule.model.js";
+import { sendMail } from "../mail/sendMail.js";
+import { MAIL_MESSAGES } from "../mail/mail.messages.js";
+import { getDetailOrderTemplateMail } from "../mail/mail.template.js";
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,
@@ -56,6 +59,16 @@ export const handlePayOSWebHookService = async (orderCode, status) => {
       $inc: { bookedCount: updatedCount.modifiedCount || 0 },
     });
     await order.save();
+    const { customerInfo } = order;
+    const { email } = customerInfo;
+    await sendMail(
+      email,
+      MAIL_MESSAGES.CREATEDTICKET_SEND(order._id),
+      getDetailOrderTemplateMail({
+        email,
+        order,
+      }),
+    );
   }
   if (status === "CANCELLED") {
     await unholdSeatService(order.userId);

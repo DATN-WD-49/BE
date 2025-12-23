@@ -564,3 +564,210 @@ export const getResetPasswordTemplateMail = ({ email, password }) => {
 </html>
 `;
 };
+
+export const getDetailOrderTemplateMail = ({ email, order }) => {
+  return `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8" />
+      <title>Order Status</title>
+      <style>
+          * {
+              box-sizing: border-box;
+              font-family: Arial, Helvetica, sans-serif;
+          }
+          body {
+              background: #ffffff;
+              margin: 0;
+              padding: 30px 0;
+              display: flex;
+              text-decoration: none;
+              justify-content: center;
+          }
+          .container {
+              width: 320px;
+          }
+          .logo {
+              text-align: center;
+              margin-bottom: 20px;
+          }
+          .logo img {
+              height: 70px;
+          }
+          .card {
+              background: #f3faf6;
+              border-radius: 18px;
+              padding: 24px;
+              margin-bottom: 18px;
+          }
+          .center {
+              text-align: center;
+          }
+          .title {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 18px;
+              color: #2b2b2b;
+              text-decoration: none;
+          }
+          .progress {
+              font-size: 13px;
+              color: #9a9a9a;
+              margin-bottom: 30px;
+          }
+          .progress .active {
+              color: #000;
+              font-weight: bold;
+          }
+          .icon {
+              font-size: 48px;
+              margin-bottom: 24px;
+          }
+          .btn {
+              background: #065945;
+              color: #fff;
+              padding: 14px;
+              border-radius: 10px;
+              font-weight: bold;
+              letter-spacing: 1px;
+              cursor: pointer;
+              text-align: center;
+              margin-top: 16px;
+          }
+          .order-title {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 6px;
+          }
+          .order-number {
+              font-size: 16px;
+              color: #666;
+              margin-bottom: 20px;
+          }
+          hr {
+              border: none;
+              border-top: 1px solid #e5e7eb;
+              margin: 16px 0;
+          }
+          .info-grid {
+              font-size: 14px;
+              text-align: left;
+          }
+          .info-title {
+              font-weight: bold;
+              margin-bottom: 6px;
+          }
+          .info-text p {
+              margin: 0;
+              line-height: 1.5;
+              color: #555;
+              text-decoration: none;
+          }
+          .highlight {
+              font-weight: bold;
+          }
+          .qr-box {
+              background: #f3faf6;
+              border-radius: 12px;
+              padding: 12px;
+              text-align: center;
+              margin-top: 16px;
+          }
+          .qr {
+              width: 250px;
+              height: 250px;
+              margin: 0 auto 12px;
+              background: #e2e8f0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+          }
+          .payment-box {
+              background: #ffffff;
+              border-radius: 12px;
+              padding: 12px;
+              margin-top: 16px;
+              text-align: center;
+          }
+          .payment-box h2,
+          .qr-box h2 {
+              font-size: 18px;
+              font-weight: 600;
+              color: #334155;
+              margin-bottom: 16px;
+          }
+          .payment-box p {
+              margin: 0;
+              color: #475569;
+          }
+          .download-btn {
+              margin-top: 16px;
+              padding: 8px 24px;
+              border-radius: 8px;
+              background: #065945;
+              color: #fff;
+              border: none;
+              cursor: pointer;
+          }
+      </style>
+  </head>
+
+  <body>
+      <div class="container">
+          <div class="logo">
+              <img src="https://drive.google.com/uc?export=view&id=1-2Bp8K-umAvVoe5CJlvjRfm1xOlqoCae" alt="GOTICKET">
+          </div>
+          <div class="card center">
+              <div class="title">Cảm ơn email ${email} vì đã đặt vé của Go Ticket!</div>
+              <div class="progress">
+                  <span class="active">✔ Confirmed</span>
+              </div>
+              <div class="icon">👍✨</div>
+              <div class="btn">Xem đơn hàng của bạn</div>
+          </div>
+          <div class="card">
+              <div class="order-title">Thông tin đơn hàng</div>
+              <div class="order-number">Mã đơn hàng: ${order._id}</div>
+              <hr />
+              <div class="info-grid">
+                  <div class="info-title">Thông tin chuyến đi:</div>
+                  <div class="info-text">
+                      <p><span class="highlight">Điểm đón:</span> ${order.pickupPoint}</p>
+                      <p><span class="highlight">Điểm trả:</span> ${order.dropPoint}</p>
+                      <p><span class="highlight">Khởi hành:</span> ${order.startTime}</p>
+                      <p><span class="highlight">Biển số:</span> ${order.carInfo.licensePlate}</p>
+                      <p><span class="highlight">Loại xe:</span> ${order.carInfo.type}</p>
+                  </div>
+              </div>
+              <hr />
+              <div class="info-grid">
+                  <div class="info-title">Thông tin khách hàng:</div>
+                  <div class="info-text">
+                      <p><span class="highlight">Họ Tên:</span> ${order.customerInfo.userName}</p>
+                      <p><span class="highlight">Email:</span> ${order.customerInfo.email}</p>
+                      <p><span class="highlight">SĐT:</span> ${order.customerInfo.phone}</p>
+                  </div>
+              </div>
+              <hr />
+              <div class="info-text">
+                  <p><span class="highlight">Ghế đã đặt:</span> Danh sách ghế</p>
+                  <p><span class="highlight">Tổng tiền:</span> ${order.totalPrice}</p>
+              </div>
+              <div class="qr-box">
+                  <h2>Mã QR Check-in</h2>
+                  <div class="qr">QR</div>
+                  <p>Mã đơn hàng: <strong>${order._id}</strong></p>
+              </div>
+              <div class="payment-box">
+                  <h2>Thông Tin Thanh Toán</h2>
+                  <p><strong>Tổng tiền:</strong> ${order.totalPrice}</p>
+                  <button class="download-btn">Tải Vé PDF</button>
+              </div>
+              <hr />
+              <div class="btn">Xem đơn hàng của bạn</div>
+          </div>
+      </div>
+    </body>
+  </html>
+  `;
+};
