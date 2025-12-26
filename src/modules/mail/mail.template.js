@@ -787,7 +787,9 @@ export const getDetailOrderTemplateMail = ({ email, order, scheduleInfo }) => {
               </div>
               <div class="qr-box">
                   <h2>Mã QR Check-in</h2>
-                  <div class="qr">QR</div>
+                  <div class="qr">
+                    <img src="cid:qr_order" width="250px" height="250px" alt="GoTicketQr">
+                  </div>
                   <p>Mã đơn hàng: <strong>${order._id}</strong></p>
               </div>
               <div class="payment-box">
