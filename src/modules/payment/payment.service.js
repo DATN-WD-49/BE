@@ -8,6 +8,10 @@ import Schedule from "../schedule/schedule.model.js";
 import { sendMail } from "../mail/sendMail.js";
 import { MAIL_MESSAGES } from "../mail/mail.messages.js";
 import { getDetailOrderTemplateMail } from "../mail/mail.template.js";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import User from "../user/user.model.js";
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,
@@ -59,14 +63,44 @@ export const handlePayOSWebHookService = async (orderCode, status) => {
       $inc: { bookedCount: updatedCount.modifiedCount || 0 },
     });
     await order.save();
-    const { customerInfo } = order;
+
+    const { crew } = await Schedule.findById(order.scheduleId);
+    const scheduleCrews = [];
+    for (const cr of crew) {
+      const { userName, phone } = await User.findById(cr.userId);
+      scheduleCrews.push({
+        name: userName,
+        phone: phone,
+        role: cr.role === "driver" ? "Tài xế" : "Phụ xe",
+      });
+    }
+    const { customerInfo, seats, startTime, arrivalTime } = order;
     const { email } = customerInfo;
+    const seatLabels = [...seats]
+      .sort((a, b) => a.seatOrder - b.seatOrder)
+      .map((seat) => seat.seatLabel)
+      .join(", ");
+    const startTimeLabel = dayjs(startTime).format(
+      "HH [giờ] mm [phút] [ngày] DD [tháng] MM [năm] YYYY",
+    );
+    const arrivalTimeLabel = dayjs(arrivalTime).format(
+      "HH [giờ] mm [phút] [ngày] DD [tháng] MM [năm] YYYY",
+    );
+
+    const scheduleInfo = {
+      scheduleCrews,
+      seatLabels,
+      startTimeLabel,
+      arrivalTimeLabel,
+    };
+
     await sendMail(
       email,
       MAIL_MESSAGES.CREATEDTICKET_SEND(order._id),
       getDetailOrderTemplateMail({
         email,
         order,
+        scheduleInfo,
       }),
     );
   }
