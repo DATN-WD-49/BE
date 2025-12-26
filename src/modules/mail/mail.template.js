@@ -565,7 +565,7 @@ export const getResetPasswordTemplateMail = ({ email, password }) => {
 `;
 };
 
-export const getDetailOrderTemplateMail = ({ email, order }) => {
+export const getDetailOrderTemplateMail = ({ email, order, scheduleInfo }) => {
   return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -585,7 +585,9 @@ export const getDetailOrderTemplateMail = ({ email, order }) => {
               justify-content: center;
           }
           .container {
-              width: 320px;
+            max-width: 600px;
+            width: 100%;
+            margin: 5px auto;
           }
           .logo {
               text-align: center;
@@ -657,6 +659,11 @@ export const getDetailOrderTemplateMail = ({ email, order }) => {
               font-weight: bold;
               margin-bottom: 6px;
           }
+          .info-title2 {
+              font-size: 13px;
+              font-weight: 600;
+              margin-bottom: 4px;
+          }    
           .info-text p {
               margin: 0;
               line-height: 1.5;
@@ -709,6 +716,11 @@ export const getDetailOrderTemplateMail = ({ email, order }) => {
               border: none;
               cursor: pointer;
           }
+          @media screen and (max-width: 320px) {
+            .qr {
+              width: 100%;
+            }
+          }
       </style>
   </head>
 
@@ -734,10 +746,30 @@ export const getDetailOrderTemplateMail = ({ email, order }) => {
                   <div class="info-text">
                       <p><span class="highlight">Điểm đón:</span> ${order.pickupPoint}</p>
                       <p><span class="highlight">Điểm trả:</span> ${order.dropPoint}</p>
-                      <p><span class="highlight">Khởi hành:</span> ${order.startTime}</p>
+                      <p><span class="highlight">Thời gian khởi hành:</span> ${scheduleInfo.startTimeLabel}</p>
+                      <p><span class="highlight">Thời gian đến nơi (Dự kiến):</span> ${scheduleInfo.arrivalTimeLabel}</p>
+                  </div>
+              </div>
+              <hr />
+              <div class="info-grid">
+                  <div class="info-title">Thông tin xe đưa đón:</div>
+                  <div class="info-text">
                       <p><span class="highlight">Biển số:</span> ${order.carInfo.licensePlate}</p>
                       <p><span class="highlight">Loại xe:</span> ${order.carInfo.type}</p>
                   </div>
+                  ${scheduleInfo.scheduleCrews
+                    .map(
+                      (crew) => `
+                      <br />
+                      <div class="info-title2">Thông tin nhân viên:</div>
+                      <div class="info-text">
+                          <p><span class="highlight">Tên:</span> ${crew.name}</p>
+                          <p><span class="highlight">SĐT:</span> ${crew.phone}</p>
+                          <p><span class="highlight">Vai trò:</span> ${crew.role}</p>
+                      </div>
+                    `,
+                    )
+                    .join("")}
               </div>
               <hr />
               <div class="info-grid">
@@ -750,7 +782,7 @@ export const getDetailOrderTemplateMail = ({ email, order }) => {
               </div>
               <hr />
               <div class="info-text">
-                  <p><span class="highlight">Ghế đã đặt:</span> Danh sách ghế</p>
+                  <p><span class="highlight">Ghế đã đặt:</span> ${scheduleInfo.seatLabels}</p>
                   <p><span class="highlight">Tổng tiền:</span> ${order.totalPrice}</p>
               </div>
               <div class="qr-box">
