@@ -11,12 +11,18 @@ const tranporter = nodemailder.createTransport({
   },
 });
 
-export const sendMail = async (toEmail, subject, template) => {
+export const sendMail = async (
+  toEmail,
+  subject,
+  template,
+  attachments = [],
+) => {
   const info = await tranporter.sendMail({
     from: "GoTicket <no-reply@goticket.com>",
     to: toEmail,
     subject: `${subject}`,
     html: template,
+    attachments,
     replyTo: undefined,
   });
   console.log("Email send: %s", info.messageId);
