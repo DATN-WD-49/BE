@@ -8,6 +8,7 @@ import {
   getAllOrderService,
   getDetailOrderService,
   updateOrderService,
+  verifyOrderService,
 } from "./order.service.js";
 
 export const getAllOrder = handleAsync(async (req, res) => {
@@ -41,9 +42,20 @@ export const updateOrder = handleAsync(async (req, res) => {
   return createResponse(res, 200, ORDER_MESSAGES.ORDER_UPDATED, response);
 });
 
-export const updateStatusOrder = handleAsync(async (req, res) => {
+export const comfirmStatusOrder = handleAsync(async (req, res) => {
   const { id } = req.params;
   const { newStatus } = req.body;
   const response = await updateOrderService(id, newStatus);
   return createResponse(res, 200, ORDER_MESSAGES.ORDER_UPDATED, response);
+});
+
+export const verifyOrder = handleAsync(async (req, res) => {
+  const { id } = req.params;
+  const { response, message } = await verifyOrderService(id);
+  return createResponse(
+    res,
+    200,
+    message ? message : ORDER_MESSAGES.ORDER_NOT_USED,
+    response,
+  );
 });
