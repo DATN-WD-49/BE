@@ -65,6 +65,9 @@ const orderSchema = new mongoose.Schema(
       // unique: true,
     },
     paymentCheckoutUrl: { type: String },
+    qrCode: {
+      type: Buffer,
+    },
     carId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Car",

@@ -19,7 +19,7 @@ export const SCHEDULE_MESSAGES = {
     return `Xe ${conflictCar.carId.licensePlate} đã có lịch vào lúc ${dayjs(conflictCar.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
   },
   CREW_CONFLICT: (conflict, conflictCrews) => {
-    return `Nhân sự ${conflictCrews.map((crew) => crew.userName).join(",")} đã có lịch vào lúc ${dayjs(conflict.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
+    return `Nhân sự ${conflictCrews.map((crew) => crew.userName).join(", ")} đã có lịch vào lúc ${dayjs(conflict.startTime).format("HH:mm[,] dddd [Ngày] DD [Tháng] MM [Năm] YYYY")}.`;
   },
   ROUTE_NOT_AVAILABLE:
     "tuyến đường tương ứng với lịch chạy này đang không khả dụng!",
