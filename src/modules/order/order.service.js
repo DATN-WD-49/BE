@@ -10,6 +10,13 @@ import {
   checkAvaliableSeat,
 } from "./order.utils.js";
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const populatedOrder = [
   {
     path: "carId",
@@ -99,4 +106,44 @@ export const comfirmOrderService = async (id, status = "USED") => {
   response.status = status;
   await response.save();
   return response;
+};
+
+export const verifyOrderService = async (id) => {
+  const response = await Order.findById(id)
+    .populate({
+      path: "carId",
+      select: "-createdAt -updatedAt",
+    })
+    .populate({
+      path: "routeId",
+      select: "-createdAt -updatedAt",
+    })
+    .populate({
+      path: "userId",
+      select: "userName email crew",
+    })
+    .populate({
+      path: "scheduleId",
+      select: "startTime arrivalTime phone",
+    })
+    .lean();
+  if (!response) {
+    throwError(400, ORDER_MESSAGES.ORDER_NOT_FOUND);
+  }
+  const isUsed = response.status === "USED";
+
+  if (isUsed) {
+    const usedTimeLabel = dayjs(response.updatedAt).format(
+      "HH [giờ] mm [phút] [ngày] DD [tháng] MM [năm] YYYY",
+    );
+    const message = `Order đã được sử dụng vào ${usedTimeLabel}`;
+    return {
+      response,
+      message,
+    };
+  }
+
+  return {
+    response,
+  };
 };

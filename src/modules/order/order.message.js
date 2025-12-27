@@ -24,5 +24,5 @@ export const ORDER_MESSAGES = {
   CONFLICT_ORDER: "Đã có một vé xe khác với thông tin tương tự",
   ORDER_NOT_AVALIABLE: "Vé xe đã không còn khả dụng",
   ORDER_NOT_PAID: "Vé xe này chưa được thanh toán",
-  ORDER_NOT_USED: "Vé xe chưa được sử dụng",
+  ORDER_NOT_USED: "Vé xe này chưa được sử dụng",
 };

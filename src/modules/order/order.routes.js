@@ -6,6 +6,7 @@ import {
   getAllOrderByUser,
   getDetailOrder,
   updateOrder,
+  verifyOrder,
 } from "./order.controller.js";
 import { authenticate } from "../../common/middlewares/auth.middleware.js";
 import { JWT_ACCESS_SECRET } from "../../common/configs/environment.js";
@@ -22,4 +23,6 @@ orderRouter.get("/detail/:id", getDetailOrder);
 orderRouter.post("/create-payos", createOrder);
 orderRouter.patch("/update/:id", updateOrder);
 orderRouter.patch("/confirm/:id", comfirmStatusOrder);
+orderRouter.patch("/verfiry/:id", verifyOrder);
+
 export default orderRouter;
