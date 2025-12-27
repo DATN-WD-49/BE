@@ -88,4 +88,15 @@ export const updateOrderService = async (id, payload) => {
   return updatedOrder;
 };
 
-export const updateStatusOrderService = async (id, status) => {};
+export const comfirmOrderService = async (id, status = "USED") => {
+  const response = await Order.findById(id);
+  if (!response) {
+    throwError(400, ORDER_MESSAGES.ORDER_NOT_FOUND);
+  }
+  if (response.isPaid === false) {
+    throwError(400, ORDER_MESSAGES.ORDER_NOT_PAID);
+  }
+  response.status = status;
+  await response.save();
+  return response;
+};
