@@ -735,7 +735,6 @@ export const getDetailOrderTemplateMail = ({ email, order, scheduleInfo }) => {
                   <span class="active">✔ Confirmed</span>
               </div>
               <div class="icon">👍✨</div>
-              <div class="btn">Xem đơn hàng của bạn</div>
           </div>
           <div class="card">
               <div class="order-title">Thông tin đơn hàng</div>
@@ -795,13 +794,13 @@ export const getDetailOrderTemplateMail = ({ email, order, scheduleInfo }) => {
               <div class="payment-box">
                   <h2>Thông Tin Thanh Toán</h2>
                   <p><strong>Tổng tiền:</strong> ${order.totalPrice}</p>
-                  <button class="download-btn">Tải Vé PDF</button>
               </div>
               <hr />
-              <div class="btn">Xem đơn hàng của bạn</div>
+              
           </div>
       </div>
     </body>
   </html>
   `;
 };
+//<div class="btn">Xem đơn hàng của bạn</div>
