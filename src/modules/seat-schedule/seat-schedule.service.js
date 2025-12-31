@@ -122,3 +122,24 @@ export const unholdSeatService = async (userId) => {
   });
   return result.deletedCount;
 };
+
+export const extendHoldSeatTimeService = async (
+  userId,
+  scheduleId,
+  seatsIds,
+  extraMinutes = 5,
+) => {
+  const filter = {
+    userId,
+    status: "hold",
+  };
+  if (scheduleId) filter.scheduleId = scheduleId;
+  if (seatsIds) filter.seatId = { $in: seatsIds };
+
+  const newExpireTime = dayjs.add(extraMinutes, "minute").toDate();
+  const result = await SeatSchedule.updateMany(filter, {
+    $set: { expiredHold: newExpireTime },
+  });
+
+  return result;
+};

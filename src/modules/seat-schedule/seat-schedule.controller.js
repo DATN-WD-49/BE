@@ -2,6 +2,7 @@ import { ROOT_MESSAGES } from "../../common/constants/messages.js";
 import handleAsync from "../../common/utils/async-handler.js";
 import createResponse from "../../common/utils/create-response.js";
 import {
+  extendHoldSeatTimeService,
   getSeatScheduleService,
   toggleSeatService,
   unholdSeatService,
@@ -23,5 +24,13 @@ export const toggleSeat = handleAsync(async (req, res) => {
 export const unholdSeats = handleAsync(async (req, res) => {
   const { _id } = req.user;
   const data = await unholdSeatService(_id);
+  return createResponse(res, 200, "OK", data);
+});
+
+export const extendHoldSeatTime = handleAsync(async (req, res) => {
+  const { _id } = req.user;
+  const { scheduleId } = req.params;
+  const { seatIds } = req.body;
+  const data = await extendHoldSeatTimeService(_id, scheduleId, seatIds);
   return createResponse(res, 200, "OK", data);
 });
