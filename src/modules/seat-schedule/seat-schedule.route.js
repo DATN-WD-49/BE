@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  extendHoldSeatTime,
   getSeatSchedule,
   toggleSeat,
   unholdSeats,
@@ -12,5 +13,6 @@ seatScheduleRoute.get("/seat-map/:carId/:scheduleId", getSeatSchedule);
 seatScheduleRoute.use(authenticate(JWT_ACCESS_SECRET));
 seatScheduleRoute.post("/toogle-seat", toggleSeat);
 seatScheduleRoute.patch("/un-hold", unholdSeats);
+seatScheduleRoute.patch("/extend-hold/:scheduleId", extendHoldSeatTime);
 
 export default seatScheduleRoute;
