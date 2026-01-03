@@ -3,6 +3,7 @@ import handleAsync from "../../common/utils/async-handler.js";
 import createResponse from "../../common/utils/create-response.js";
 import { ORDER_MESSAGES } from "./order.message.js";
 import {
+  comfirmOrderService,
   createOrderService,
   getAllOrderByUserService,
   getAllOrderService,
@@ -45,7 +46,7 @@ export const updateOrder = handleAsync(async (req, res) => {
 export const comfirmStatusOrder = handleAsync(async (req, res) => {
   const { id } = req.params;
   const { newStatus } = req.body;
-  const response = await updateOrderService(id, newStatus);
+  const response = await comfirmOrderService(id, newStatus);
   return createResponse(res, 200, ORDER_MESSAGES.ORDER_UPDATED, response);
 });
 
