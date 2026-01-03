@@ -55,7 +55,7 @@ export const verifyOrder = handleAsync(async (req, res) => {
   const { response, message } = await verifyOrderService(id);
   return createResponse(
     res,
-    200,
+    message ? 400 : 200,
     message ? message : ORDER_MESSAGES.ORDER_NOT_USED,
     response,
   );
