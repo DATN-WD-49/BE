@@ -17,6 +17,6 @@ export const handlePayOSWebHook = handleAsync(async (req, res) => {
   const { orderCode, status } = req.query;
   const updatedOrder = await handlePayOSWebHookService(orderCode, status);
   return updatedOrder
-    ? res.redirect("http://localhost:5173/payment/success")
+    ? res.redirect(`http://localhost:5173/payment/success/${updatedOrder._id}`)
     : res.redirect("http://localhost:5173/payment/failed");
 });
