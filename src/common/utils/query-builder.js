@@ -75,7 +75,7 @@ export const queryBuilder = async (Model, queryParams, options = {}) => {
   return { data };
 };
 
-function applyFilter(key, value, queryConditions) {
+export function applyFilter(key, value, queryConditions) {
   if (value == null || value === "") return;
 
   if (value === "__nullOrEmpty__") {
@@ -105,6 +105,11 @@ function applyFilter(key, value, queryConditions) {
   }
 
   if (mongoose.Types.ObjectId.isValid(value)) {
+    queryConditions[key] = value;
+    return;
+  }
+
+  if (!isNaN(value)) {
     queryConditions[key] = value;
     return;
   }
