@@ -11,7 +11,6 @@ export const getOverviewService = async (query) => {
   const { current, previous } = await resolveDateRanges(query.createdAt);
   //đoạn này đang bị lỗi
   const { createdAt, ...rest } = query;
-  console.log(current, previous);
   const [currentS, previousS] = await Promise.all([
     getAggregateOverviewTicket({
       ...rest,

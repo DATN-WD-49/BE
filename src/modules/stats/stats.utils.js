@@ -85,21 +85,6 @@ export const resolveDateRanges = async (createdAt, field = "createdAt") => {
     .startOf("day");
   const previousDateTo = currentDateRanges.from.subtract(1, "day").endOf("day");
 
-  console.log(previousDateFrom, previousDateTo);
-  console.log({
-    current: {
-      [field]: {
-        $gte: currentDateRanges.from.toDate(),
-        $lte: currentDateRanges.to.toDate(),
-      },
-    },
-    previous: {
-      [field]: {
-        $gte: previousDateFrom.toDate(),
-        $lte: previousDateTo.toDate(),
-      },
-    },
-  });
   return {
     current: {
       [field]: {
@@ -156,11 +141,11 @@ export const applyQuickDateFilter = (qFilter) => {
   }
 };
 
-export const convertQueryTime = (timeRange, field = "createdAt") => {
-  if (!timeRange[field]) return null;
+export const convertQueryTime = (range, field = "createdAt") => {
+  if (!range[field]) return null;
 
   return {
-    from: timeRange[field].$gte || null,
-    to: timeRange[field].$lte || null,
+    from: range[field].$gte || null,
+    to: range[field].$lte || null,
   };
 };
