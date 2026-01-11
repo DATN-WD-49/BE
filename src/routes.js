@@ -10,6 +10,7 @@ import scheduleRoute from "./modules/schedule/schedule.routes.js";
 import seatScheduleRoute from "./modules/seat-schedule/seat-schedule.route.js";
 import orderRouter from "./modules/order/order.routes.js";
 import paymentRouter from "./modules/payment/payment.routes.js";
+import statsRoute from "./modules/stats/stats.routes.js";
 
 const routes = Router();
 routes.use("/auth", authRoute);
@@ -21,4 +22,5 @@ routes.use("/schedule", scheduleRoute);
 routes.use("/seat-schedule", seatScheduleRoute);
 routes.use("/order", orderRouter);
 routes.use("/payment", paymentRouter);
+routes.use("/stats", statsRoute);
 export default routes;
