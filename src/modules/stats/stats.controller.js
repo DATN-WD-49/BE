@@ -5,6 +5,7 @@ import { applyFilter } from "../../common/utils/query-builder.js";
 import {
   getOverviewByMonthService,
   getOverviewService,
+  getTopRevenueRouteService,
 } from "./stats.service.js";
 import { applyQuickDateFilter } from "./stats.utils.js";
 
@@ -47,4 +48,23 @@ export const getOverviewByMonth = handleAsync(async (req, res) => {
     };
   });
   return createResponse(res, 200, "OK", { year: yearQuery, result });
+});
+
+export const getTopRevenueRoute = handleAsync(async (req, res) => {
+  const match = {};
+  Object.entries(req.query).forEach(([key, value]) =>
+    applyFilter(key, value, match),
+  );
+  if (match.quickFilter) {
+    const { createdFrom, createdTo } = applyQuickDateFilter(
+      req.query.quickFilter,
+    );
+    match.createdAt = {
+      $gte: createdFrom,
+      $lte: createdTo,
+    };
+    delete match.quickFilter;
+  }
+  const data = await getTopRevenueRouteService(match);
+  return createResponse(res, 200, "OK", data);
 });

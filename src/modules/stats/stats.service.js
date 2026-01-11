@@ -8,7 +8,7 @@ import {
 } from "./stats.utils.js";
 
 export const getOverviewService = async (query) => {
-  const { current, previous } = await resolveDateRanges(query.createdAt);
+  const { current, previous } = await resolveDateRanges(query?.createdAt);
   //đoạn này đang bị lỗi
   const { createdAt, ...rest } = query;
   const [currentS, previousS] = await Promise.all([
@@ -92,4 +92,52 @@ export const getOverviewByMonthService = async (query) => {
   ]);
 
   return rawResult;
+};
+
+export const getTopRevenueRouteService = async (query) => {
+  const { current } = await resolveDateRanges(query?.createdAt);
+  const rawData = await Order.aggregate([
+    {
+      $match: {
+        ...current,
+        isPaid: true,
+        status: { $ne: "CANCELLED" },
+      },
+    },
+    {
+      $lookup: {
+        from: "routes",
+        let: { routeId: { $toObjectId: "$routeId" } },
+        pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$routeId"] } } }],
+        as: "routeInfo",
+      },
+    },
+    { $unwind: "$routeInfo" },
+    {
+      $group: {
+        _id: "$routeId",
+        pickupPoint: { $first: "$routeInfo.pickupPoint.label" },
+        dropPoint: { $first: "$routeInfo.dropPoint.label" },
+        totalTickets: { $sum: 1 },
+        revenue: { $sum: "$totalPrice" },
+        totalTickets: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        routeId: "$_id",
+        pickupPoint: 1,
+        dropPoint: 1,
+        revenue: 1,
+        totalTickets: 1,
+      },
+    },
+    { $sort: { revenue: -1, totalTickets: -1 } },
+    { $limit: 5 },
+  ]);
+  return {
+    result: rawData,
+    queryTime: convertQueryTime(current),
+  };
 };

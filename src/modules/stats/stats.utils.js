@@ -131,6 +131,11 @@ export const applyQuickDateFilter = (qFilter) => {
         createdFrom: now.subtract(1, "month").startOf("day").toISOString(),
         createdTo: now.toISOString(),
       };
+    case "yearAgo":
+      return {
+        createdFrom: now.subtract(1, "year").startOf("day").toISOString(),
+        createdTo: now.toISOString(),
+      };
     case "thisYear":
       return {
         createdFrom: now.startOf("year").toISOString(),
