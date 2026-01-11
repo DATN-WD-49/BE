@@ -1,6 +1,7 @@
 import Order from "../order/order.model.js";
 import {
   calcGrowth,
+  convertQueryTime,
   getAggregateOverviewTicket,
   getAggregateOverviewUser,
   resolveDateRanges,
@@ -31,6 +32,10 @@ export const getOverviewService = async (query) => {
       ...previous,
     }),
   ]);
+
+  const queryTimeC = convertQueryTime(current);
+  const queryTimeP = convertQueryTime(previous);
+
   return {
     tickets: {
       totalCurrent: currentS.totalTickets,
@@ -46,6 +51,10 @@ export const getOverviewService = async (query) => {
       totalCurrent: currentU.totalUsers,
       totalPrevious: previousU.totalUsers,
       growthPercents: calcGrowth(currentU.totalUsers, previousU.totalUsers),
+    },
+    queryTimes: {
+      current: queryTimeC,
+      previous: queryTimeP,
     },
   };
 };
