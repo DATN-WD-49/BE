@@ -296,7 +296,7 @@ export const getTopRouteService = async (query) => {
                   {
                     $eq: [{ $toObjectId: "$routeId" }, "$$routeId"],
                   },
-                  //   { $eq: ["$status", "completed"] },
+                  { $eq: ["$status", "completed"] },
                 ],
               },
             },
@@ -378,7 +378,7 @@ export const getTopCarService = async (query) => {
                   {
                     $eq: [{ $toObjectId: "$carId" }, "$$carId"],
                   },
-                  //   { $eq: ["$status", "completed"] },
+                  { $eq: ["$status", "completed"] },
                 ],
               },
             },
