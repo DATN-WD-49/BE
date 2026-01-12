@@ -30,4 +30,8 @@ export const SCHEDULE_MESSAGES = {
   CREATE_MANY_ERROR_SCHEDULE: (totalLength, failedLength) => {
     return `Tạo lịch chạy thất bại do có ${failedLength} lịch chạy tạo thất bại trong ${totalLength} lịch chạy`;
   },
+  START_TIME_TOO_SOON: (minStartTime) =>
+    `Thời điểm bắt đầu phải sau thời điểm hiện tại ít nhất 12 giờ (từ ${dayjs(
+      minStartTime,
+    ).format("HH:mm DD/MM/YYYY")})`,
 };
