@@ -187,7 +187,7 @@ export const updateStatusManySchedule = async (
   }
   if (!newStatus) {
     const results = await Schedule.updateMany(
-      { [filterKey]: filterValue, disableBy: "service" },
+      { [filterKey]: filterValue, disableBy: "service", status: "pending" },
       { $set: { isDisable: true } },
     );
     return results;
@@ -233,7 +233,7 @@ export const updateStatusManySchedule = async (
         throwError(400, SCHEDULE_MESSAGES.CANCELLED_SCHEDULE);
       }
       await Schedule.findOneAndUpdate(
-        { _id, disableBy: "service" },
+        { _id, disableBy: "service", status: "pending" },
         { $set: { isDisable: false } },
       );
       unlockScheduleSuccess += 1;
