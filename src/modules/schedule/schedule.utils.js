@@ -14,19 +14,6 @@ export const checkConflictTime = async (
   endT,
   excludeId = null,
 ) => {
-  const minStartTime = dayjs().add(12, "hour");
-
-  if (dayjs(startT).isBefore(minStartTime)) {
-    return {
-      _id: null,
-      carId,
-      crew: [],
-      startTime: startT,
-      arrivalTime: endT,
-      message: SCHEDULE_MESSAGES.START_TIME_TOO_SOON(minStartTime),
-    };
-  }
-
   const condition = {
     $or: [{ carId }, { "crew.userId": { $in: crewIds } }],
     isDisable: false,
