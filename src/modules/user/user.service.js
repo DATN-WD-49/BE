@@ -80,19 +80,19 @@ export const createUserService = async (payload) => {
   const conflictUsers = await User.find({
     $or: [{ email }, { phone }],
   });
-  if (conflictUsers) {
-    const conflictUsers = [];
+  if (conflictUsers.length > 0) {
+    const conflict = [];
     conflictUsers.forEach((user) => {
       if (user.email === email) {
-        conflictUsers.push({ emailConflictUser: user });
+        conflict.push({ emailConflictUser: user });
       }
       if (user.phone === phone) {
-        conflictUsers.push({ phoneConflictUser: user });
+        conflict.push({ phoneConflictUser: user });
       }
     });
     return {
       user: conflictUsers,
-      conflictAmount: conflictUsers.length,
+      conflictAmount: conflict.length,
     };
   }
   if (role === "admin") {
@@ -103,25 +103,8 @@ export const createUserService = async (payload) => {
     ...payload,
     password: hashedPassword,
   });
-  const payloadJwt = {
-    _id: user._id,
-    role: user.role,
-  };
-  const verifyToken = generateToken(
-    payloadJwt,
-    JWT_VERIFY_SECRET,
-    JWT_VERIFY_EXPIRED,
-  );
-  user.verifyToken = verifyToken;
+  user.isVerified = true;
   await user.save();
-  await sendMail(
-    email,
-    MAIL_MESSAGES.VERIFY_SEND,
-    getVerifyTemplateMail({
-      email,
-      link: `${API_URL}/auth/verify/${verifyToken}`,
-    }),
-  );
   return user;
 };
 
