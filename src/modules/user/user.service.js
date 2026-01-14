@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
-import { throwError } from "../../common/utils/create-response.js";
+import {
+  throwError,
+  throwIfDuplicate,
+} from "../../common/utils/create-response.js";
 import { queryBuilder } from "../../common/utils/query-builder.js";
 import { AUTH_MESSAGES } from "../auth/auth.messages.js";
 import { generateToken, hashPassword } from "../auth/auth.utils.js";
@@ -71,29 +74,19 @@ export const getDetailUserService = async (id) => {
 
 export const createUserService = async (payload) => {
   const { userName, email, phone, password, role = "staff" } = payload;
-  const userNameConflict = await User.findOne({
-    userName: userName,
+  const existingUser = await User.findOne({
+    $or: [{ email }, { userName }, { phone }],
   });
-  if (userNameConflict) {
-    throwError(400, AUTH_MESSAGES.CONFLICT_NAME);
-  }
-  const conflictUsers = await User.find({
-    $or: [{ email }, { phone }],
-  });
-  if (conflictUsers.length > 0) {
-    const conflict = [];
-    conflictUsers.forEach((user) => {
-      if (user.email === email) {
-        conflict.push({ emailConflictUser: user });
-      }
-      if (user.phone === phone) {
-        conflict.push({ phoneConflictUser: user });
-      }
-    });
-    return {
-      user: conflictUsers,
-      conflictAmount: conflict.length,
-    };
+
+  if (existingUser) {
+    const {
+      userName: existingUserName,
+      email: existingEmail,
+      phone: existingPhone,
+    } = existingUser;
+    throwIfDuplicate(userName, existingUserName, AUTH_MESSAGES.CONFLICT_NAME);
+    throwIfDuplicate(email, existingEmail, AUTH_MESSAGES.CONFLICT_EMAIL);
+    throwIfDuplicate(phone, existingPhone, AUTH_MESSAGES.CONFLICT_EMAIL);
   }
   if (role === "admin") {
     throwError(400, "Admin này hiện tại phải là admin duy nhất");
