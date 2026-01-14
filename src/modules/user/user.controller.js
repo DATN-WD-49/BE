@@ -43,16 +43,8 @@ export const getDetailUser = handleAsync(async (req, res) => {
 
 export const createUser = handleAsync(async (req, res) => {
   const payload = req.body;
-  console.log(payload);
-  const { users, conflictAmount } = await createUserService(payload);
-  if (!conflictAmount)
-    return createResponse(res, 201, AUTH_MESSAGES.CREATED_STAFF, users);
-  return createResponse(
-    res,
-    200,
-    AUTH_MESSAGES.CONFLICT_CREATESTAFF(conflictAmount),
-    users,
-  );
+  const { users } = await createUserService(payload);
+  return createResponse(res, 201, AUTH_MESSAGES.CREATED_STAFF, users);
 });
 
 export const updateUser = handleAsync(async (req, res) => {
