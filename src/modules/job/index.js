@@ -1,3 +1,4 @@
+import { startOrdersCancelledJob } from "./order.cancelled.js";
 import { startOrdersExpiredJob } from "./order.expired.js";
 import { startcompletedSchedulesJob } from "./schedule.completed.js";
 import { startprepareSchedulesJob } from "./schedule.prepare.js";
@@ -12,4 +13,5 @@ export const startJob = () => {
   startRunningSchedulesJob();
   startcompletedSchedulesJob();
   startLockUsersExpiredJob();
+  startOrdersCancelledJob();
 };
