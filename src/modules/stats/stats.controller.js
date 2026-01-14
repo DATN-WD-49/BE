@@ -24,6 +24,7 @@ export const getOverview = handleAsync(async (req, res) => {
     };
     delete match.quickFilter;
   }
+  console.log(match);
   const data = await getOverviewService(match);
   return createResponse(res, 200, "OK", data);
 });
